@@ -16,7 +16,7 @@ main :: proc() {
 		{
 			width = 1920 / 2,
 			height = 1080 / 2,
-			window_title = "Sokol Boilerplate",
+			window_title = "Game - Shaders Playground",
 			init_cb = init,
 			frame_cb = frame,
 			event_cb = event,
