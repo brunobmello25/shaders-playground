@@ -3,7 +3,11 @@
 
 @vs vs
 
-void main () {}
+in vec3 aPos;
+
+void main () {
+	gl_Position= vec4(aPos.x, aPos.y, aPos.z, 1.0);
+}
 
 @end
 
@@ -12,7 +16,7 @@ void main () {}
 out vec4 frag_color;
 
 void main () {
-	frag_color = vec4(1.0, 0.0, 0.0, 1.0);
+	frag_color = vec4(1.0, 0.5, 0.2, 1.0);
 }
 
 @end

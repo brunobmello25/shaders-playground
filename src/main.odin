@@ -10,6 +10,16 @@ import shelpers "../sokol/helpers"
 
 our_context: runtime.Context
 pipeline: sg.Pipeline
+// odinfmt: disable
+triangle_vertices: []f32 = {
+	-0.5, -0.5, 0.0,
+	 0.5, -0.5, 0.0,
+	 0.0,  0.5, 0.0
+}
+// odinfmt: enable
+triangle_buffer: sg.Buffer
+triangle_indices: []u32 = {0, 1, 2}
+triangle_index_buffer: sg.Buffer
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -40,12 +50,29 @@ init :: proc "c" () {
 	pipeline = sg.make_pipeline(
 		{
 			shader = shader,
-			layout = {attrs = {}},
-			index_type = .UINT32,
-			depth = {compare = .LESS_EQUAL, write_enabled = true},
+			layout = {attrs = {ATTR_main_aPos = {format = .FLOAT3}}},
+			// index_type = .UINT32,
+			// depth = {compare = .LESS_EQUAL, write_enabled = true},
 		},
 	)
 
+	triangle_buffer = sg.make_buffer(
+		{
+			data = sg.Range {
+				ptr = raw_data(triangle_vertices[:]),
+				size = len(triangle_vertices) * size_of(f32),
+			},
+		},
+	)
+	triangle_index_buffer = sg.make_buffer(
+		{
+			data = sg.Range {
+				ptr = raw_data(triangle_indices[:]),
+				size = len(triangle_indices) * size_of(u32),
+			},
+			usage = {index_buffer = true},
+		},
+	)
 }
 
 cleanup :: proc "c" () {}
@@ -54,13 +81,20 @@ frame :: proc "c" () {
 	sg.begin_pass(
 		{
 			swapchain = sglue.swapchain(),
-			action = {
-				depth = {load_action = .CLEAR, clear_value = 1.0},
-				colors = {0 = {load_action = .CLEAR, clear_value = {1, 0, 1, 1}}},
+			action    = {
+				// colors = {0 = {load_action = .CLEAR, clear_value = {1, 0, 1, 1}}},
+				// TODO: what is this?
+				// depth = {load_action = .CLEAR, clear_value = 1.0},
 			},
 		},
 	)
 	sg.apply_pipeline(pipeline)
+
+	sg.apply_bindings(
+		{vertex_buffers = {0 = triangle_buffer}, index_buffer = triangle_index_buffer},
+	)
+	sg.draw(0, len(triangle_indices), 1)
+
 	sg.end_pass()
 }
 
