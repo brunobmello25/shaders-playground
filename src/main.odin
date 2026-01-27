@@ -7,18 +7,22 @@ import sapp "../sokol/app"
 import sg "../sokol/gfx"
 import sglue "../sokol/glue"
 import shelpers "../sokol/helpers"
+import stime "../sokol/time"
 
 our_context: runtime.Context
 pipeline: sg.Pipeline
 // odinfmt: disable
 triangle_vertices: []f32 = {
-	-0.5, -0.5, 0.0,
-	 0.5, -0.5, 0.0,
-	 0.0,  0.5, 0.0
+	 // positions
+	 0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
+	-0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
+	 0.0,  0.5, 0.0, 0.0, 0.0, 1.0,
+}
+triangle_buffer: sg.Buffer
+triangle_indices: []u32 = {
+	0, 1, 2,
 }
 // odinfmt: enable
-triangle_buffer: sg.Buffer
-triangle_indices: []u32 = {0, 1, 2}
 triangle_index_buffer: sg.Buffer
 
 main :: proc() {
@@ -42,6 +46,8 @@ main :: proc() {
 init :: proc "c" () {
 	context = our_context
 
+	stime.setup()
+
 	sg.setup(
 		{environment = sglue.environment(), logger = sg.Logger(shelpers.logger(&our_context))},
 	)
@@ -50,8 +56,13 @@ init :: proc "c" () {
 	pipeline = sg.make_pipeline(
 		{
 			shader = shader,
-			layout = {attrs = {ATTR_main_aPos = {format = .FLOAT3}}},
-			// index_type = .UINT32,
+			layout = {
+				attrs = {
+					ATTR_main_aPos = {format = .FLOAT3},
+					ATTR_main_aColor = {format = .FLOAT3},
+				},
+			},
+			index_type = .UINT32,
 			// depth = {compare = .LESS_EQUAL, write_enabled = true},
 		},
 	)
