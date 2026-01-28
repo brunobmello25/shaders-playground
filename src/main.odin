@@ -1,3 +1,5 @@
+#+feature dynamic-literals
+
 package main
 
 import "base:runtime"
@@ -13,27 +15,61 @@ import stime "../sokol/time"
 
 our_context: runtime.Context
 pipeline: sg.Pipeline
-// odinfmt: disable
-triangle_vertices: []f32 = {
-	 // positions          colors              texture
-	 0.5,  0.5, 0.0,       1.0, 0.0, 0.0,      1.0, 1.0,
-	 0.5, -0.5, 0.0,       0.0, 1.0, 0.0,      1.0, 0.0,
-	-0.5, -0.5, 0.0,       0.0, 0.0, 1.0,      0.0, 0.0,
-	-0.5,  0.5, 0.0,       1.0, 1.0, 0.0,      0.0, 1.0,
+
+Quad :: struct {
+	vertices:      sg.Buffer,
+	indices:       sg.Buffer,
+	indices_count: int,
 }
-triangle_buffer: sg.Buffer
-triangle_indices: []u32 = {
-	0, 1, 2,
-	0, 2, 3,
-}
-// odinfmt: enable
-triangle_index_buffer: sg.Buffer
-wall_texture: Texture
 
 Texture :: struct {
 	image:   sg.Image,
 	sampler: sg.Sampler,
 	view:    sg.View,
+}
+
+quad: Quad
+containerTexture: Texture
+faceTexture: Texture
+
+range_from_slice :: proc(slice: []$T) -> sg.Range {
+	return sg.Range{ptr = raw_data(slice), size = len(slice) * size_of(slice[0])}
+}
+
+range :: proc {
+	range_from_slice,
+}
+
+make_quad :: proc() -> Quad {
+	// odinfmt: disable
+	vertices_data := [dynamic]f32{
+	 0.5,  0.5, 0.0,    1.0, 0.0, 0.0,   1.0, 1.0,
+	 0.5, -0.5, 0.0,    0.0, 1.0, 0.0,   1.0, 0.0,
+	-0.5, -0.5, 0.0,    0.0, 0.0, 1.0,   0.0, 0.0,
+	-0.5,  0.5, 0.0,    1.0, 1.0, 0.0,   0.0, 1.0,
+	}
+	indices_data: [dynamic]u32 = {
+		0, 1, 2,
+		0, 2, 3,
+	}
+	// odinfmt: enable
+
+	vertices_buffer := sg.make_buffer(
+		{data = range(vertices_data[:]), size = len(vertices_data) * size_of(vertices_data[0])},
+	)
+	indices_buffer := sg.make_buffer(
+		{
+			data = range(indices_data[:]),
+			size = len(indices_data) * size_of(indices_data[0]),
+			usage = {index_buffer = true},
+		},
+	)
+
+	return Quad {
+		vertices = vertices_buffer,
+		indices = indices_buffer,
+		indices_count = len(indices_data),
+	}
 }
 
 main :: proc() {
@@ -42,8 +78,8 @@ main :: proc() {
 
 	sapp.run(
 		{
-			width = 1920 / 2,
-			height = 1080 / 2,
+			width = 800,
+			height = 800,
 			window_title = "Game - Shaders Playground",
 			init_cb = init,
 			frame_cb = frame,
@@ -79,32 +115,16 @@ init :: proc "c" () {
 		},
 	)
 
-	triangle_buffer = sg.make_buffer(
-		{
-			data = sg.Range {
-				ptr = raw_data(triangle_vertices[:]),
-				size = len(triangle_vertices) * size_of(f32),
-			},
-		},
-	)
-	triangle_index_buffer = sg.make_buffer(
-		{
-			data = sg.Range {
-				ptr = raw_data(triangle_indices[:]),
-				size = len(triangle_indices) * size_of(u32),
-			},
-			usage = {index_buffer = true},
-		},
-	)
-
-
-	wall_texture = load_texture("res/wall.jpg")
+	quad = make_quad()
+	containerTexture = load_texture("res/container.jpg")
+	faceTexture = load_texture("res/awesomeface.png")
 }
 
-load_texture :: proc(path: string) -> Texture {
+load_texture :: proc(path: cstring) -> Texture {
 	width, height, channels: c.int
 
-	img_bytes := stbi.load("res/wall.jpg", &width, &height, &channels, 4)
+	stbi.set_flip_vertically_on_load(1)
+	img_bytes := stbi.load(path, &width, &height, &channels, 4)
 	defer stbi.image_free(img_bytes)
 
 	image := sg.make_image(
@@ -152,9 +172,20 @@ frame :: proc "c" () {
 	sg.apply_pipeline(pipeline)
 
 	sg.apply_bindings(
-		{vertex_buffers = {0 = triangle_buffer}, index_buffer = triangle_index_buffer},
+		{
+			vertex_buffers = {0 = quad.vertices},
+			index_buffer = quad.indices,
+			views = {
+				VIEW_containerTexture = containerTexture.view,
+				VIEW_faceTexture = faceTexture.view,
+			},
+			samplers = {
+				SMP_containerTextureSampler = containerTexture.sampler,
+				SMP_faceTextureSampler = faceTexture.sampler,
+			},
+		},
 	)
-	sg.draw(0, len(triangle_indices), 1)
+	sg.draw(0, quad.indices_count, 1)
 
 	sg.end_pass()
 }

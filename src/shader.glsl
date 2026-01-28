@@ -25,12 +25,20 @@ in vec2 textCoord;
 
 out vec4 fragColor;
 
-layout (binding=0) uniform sampler2D wallTexture;
+layout (binding=0) uniform texture2D containerTexture;
+layout (binding=0) uniform sampler containerTextureSampler;
+
+layout (binding=1) uniform texture2D faceTexture;
+layout (binding=1) uniform sampler faceTextureSampler;
 
 void main () {
-	// fragColor = vec4(0.5, 0.0, 0.0, 1.0);
-	// fragColor = vec4(ourColor, 1.0);
-	fragColor = texture(wallTexture, textCoord);
+	vec4 containerColor = texture(sampler2D(containerTexture, containerTextureSampler), textCoord);
+	vec4 faceColor = texture(sampler2D(faceTexture, faceTextureSampler), textCoord);
+	fragColor = mix(
+		containerColor,
+		faceColor, 
+		faceColor.a
+	);
 }
 
 @end
