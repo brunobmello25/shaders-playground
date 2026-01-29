@@ -92,15 +92,16 @@ frame :: proc "c" () {
 
 
 	angle := stime.ms(stime.now()) * 0.1
-	transform :=
-		make_translation_matrix(0.5, -0.5, 0.0) *
-		make_rotation_matrix((math.to_radians(f32(angle))), 0, 0, 1) *
-		make_identity_matrix() // make_scale_matrix(0.5, 0.5, 0.5) *
+	rotvec := linalg.normalize0([3]f32{1.0, 1.0, 0.0})
+	model :=
+		make_rotation_matrix(math.to_radians(f32(angle)), rotvec.x, rotvec.y, rotvec.z) *
+		make_identity_matrix()
+
+	view := make_translation_matrix(0.0, 0.0, -3.0) * make_identity_matrix()
 
 	viewWidth := sapp.width()
 	viewHeight := sapp.height()
-	linalg.matrix4_perspective(45, viewWidth / viewHeight)
-
+	proj := linalg.matrix4_perspective_f32(45, f32(viewWidth) / f32(viewHeight), 0.1, 100.0, true)
 
 	sg.begin_pass(
 		{
@@ -130,7 +131,9 @@ frame :: proc "c" () {
 	)
 
 	params := Vsparams {
-		transform = transform,
+		model      = model,
+		view       = view,
+		projection = proj,
 	}
 	sg.apply_uniforms(UB_VSParams, range(&params))
 
