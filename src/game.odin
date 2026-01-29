@@ -3,6 +3,7 @@ package main
 import "base:runtime"
 import "core:log"
 import "core:math"
+import linalg "core:math/linalg"
 
 import sapp "../sokol/app"
 import sg "../sokol/gfx"
@@ -94,7 +95,12 @@ frame :: proc "c" () {
 	transform :=
 		make_translation_matrix(0.5, -0.5, 0.0) *
 		make_rotation_matrix((math.to_radians(f32(angle))), 0, 0, 1) *
-		make_identity_matrix()// make_scale_matrix(0.5, 0.5, 0.5) *
+		make_identity_matrix() // make_scale_matrix(0.5, 0.5, 0.5) *
+
+	viewWidth := sapp.width()
+	viewHeight := sapp.height()
+	linalg.matrix4_perspective(45, viewWidth / viewHeight)
+
 
 	sg.begin_pass(
 		{
