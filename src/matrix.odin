@@ -5,9 +5,6 @@ import "core:math"
 cos :: math.cos
 sin :: math.sin
 
-Mat4 :: matrix[4, 4]f32
-Vec4 :: [4]f32
-
 make_scale_matrix :: proc(x, y, z: f32) -> Mat4 {
 	// odinfmt: disable
 	return Mat4{

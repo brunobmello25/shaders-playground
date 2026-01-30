@@ -7,6 +7,10 @@ import sg "../sokol/gfx"
 import "core:c"
 import stbi "vendor:stb/image"
 
+Mat4 :: matrix[4, 4]f32
+Vec4 :: [4]f32
+Vec3 :: [3]f32
+
 range :: proc {
 	range_from_slice,
 	range_from_struct,
@@ -18,74 +22,6 @@ range_from_struct :: proc(data: ^$T) -> sg.Range {
 
 range_from_slice :: proc(vertices: []$T) -> sg.Range {
 	return sg.Range{ptr = raw_data(vertices), size = len(vertices) * size_of(T)}
-}
-
-make_quad :: proc() -> Quad {
-	// odinfmt: disable
-	vertices_data := [dynamic]f32{
-	-0.5, -0.5, -0.5,  0.0, 0.0,
-     0.5, -0.5, -0.5,  1.0, 0.0,
-     0.5,  0.5, -0.5,  1.0, 1.0,
-     0.5,  0.5, -0.5,  1.0, 1.0,
-    -0.5,  0.5, -0.5,  0.0, 1.0,
-    -0.5, -0.5, -0.5,  0.0, 0.0,
-
-    -0.5, -0.5,  0.5,  0.0, 0.0,
-     0.5, -0.5,  0.5,  1.0, 0.0,
-     0.5,  0.5,  0.5,  1.0, 1.0,
-     0.5,  0.5,  0.5,  1.0, 1.0,
-    -0.5,  0.5,  0.5,  0.0, 1.0,
-    -0.5, -0.5,  0.5,  0.0, 0.0,
-
-    -0.5,  0.5,  0.5,  1.0, 0.0,
-    -0.5,  0.5, -0.5,  1.0, 1.0,
-    -0.5, -0.5, -0.5,  0.0, 1.0,
-    -0.5, -0.5, -0.5,  0.0, 1.0,
-    -0.5, -0.5,  0.5,  0.0, 0.0,
-    -0.5,  0.5,  0.5,  1.0, 0.0,
-
-     0.5,  0.5,  0.5,  1.0, 0.0,
-     0.5,  0.5, -0.5,  1.0, 1.0,
-     0.5, -0.5, -0.5,  0.0, 1.0,
-     0.5, -0.5, -0.5,  0.0, 1.0,
-     0.5, -0.5,  0.5,  0.0, 0.0,
-     0.5,  0.5,  0.5,  1.0, 0.0,
-
-    -0.5, -0.5, -0.5,  0.0, 1.0,
-     0.5, -0.5, -0.5,  1.0, 1.0,
-     0.5, -0.5,  0.5,  1.0, 0.0,
-     0.5, -0.5,  0.5,  1.0, 0.0,
-    -0.5, -0.5,  0.5,  0.0, 0.0,
-    -0.5, -0.5, -0.5,  0.0, 1.0,
-
-    -0.5,  0.5, -0.5,  0.0, 1.0,
-     0.5,  0.5, -0.5,  1.0, 1.0,
-     0.5,  0.5,  0.5,  1.0, 0.0,
-     0.5,  0.5,  0.5,  1.0, 0.0,
-    -0.5,  0.5,  0.5,  0.0, 0.0,
-    -0.5,  0.5, -0.5,  0.0, 1.0
-	}
-	// indices_data: [dynamic]u32 = {
-	// }
-	// odinfmt: enable
-
-	vertices_buffer := sg.make_buffer(
-		{data = range(vertices_data[:]), size = len(vertices_data) * size_of(vertices_data[0])},
-	)
-	// indices_buffer := sg.make_buffer(
-	// 	{
-	// 		data = range(indices_data[:]),
-	// 		size = len(indices_data) * size_of(indices_data[0]),
-	// 		usage = {index_buffer = true},
-	// 	},
-	// )
-
-	return Quad {
-		vertices = vertices_buffer,
-		indices = {},
-		vertex_count = 36,
-		indices_count = 0,
-	}
 }
 
 load_texture :: proc(path: cstring) -> Texture {
@@ -123,3 +59,4 @@ load_texture :: proc(path: cstring) -> Texture {
 
 	return Texture{image = image, sampler = sampler, view = view}
 }
+
