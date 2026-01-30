@@ -51,11 +51,6 @@ main :: proc() {
 init :: proc "c" () {
 	context = our_context
 
-	pos := Vec4{1.0, 0.0, 0.0, 1.0}
-
-	pos = make_translation_matrix(1, 1, 0) * pos
-	log.debug(pos)
-
 	stime.setup()
 
 	sg.setup(
@@ -77,6 +72,7 @@ init :: proc "c" () {
 		},
 	)
 
+	camera = make_camera()
 	cube = make_cube()
 	containerTexture = load_texture("res/container.jpg")
 	faceTexture = load_texture("res/awesomeface.png")

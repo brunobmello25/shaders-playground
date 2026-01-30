@@ -38,7 +38,7 @@ draw_many_cubes :: proc() {
 			make_rotation_matrix(math.to_radians(f32(angle)), rotvec.x, rotvec.y, rotvec.z) *
 			make_identity_matrix()
 
-		view := make_translation_matrix(0.0, 0.0, -5.0) * make_identity_matrix()
+		view := camera_to_view(camera, Vec3{0, 1, 0})
 
 		// fov := f32(45.0 + sin(stime.ms(stime.now()) * 0.0001) * 20.0)
 		fov := f32(45.0)
