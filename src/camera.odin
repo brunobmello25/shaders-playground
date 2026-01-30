@@ -14,20 +14,17 @@ camera_to_view :: proc(camera: Camera, world_up: Vec3) -> Mat4 {
 	
 	// odinfmt: disable
 	look_at := Mat4{
-		right.x, right.y, right.z, 0,
-		   up.x,    up.y,    up.z, 0,
-		  dir.x,   dir.y,   dir.z, 0,
-		   0,       0,       0,    0,
-	} * Mat4{
-		1, 0, 0, -camera.pos.x,
-		0, 1, 0, -camera.pos.y,
-		0, 0, 1, -camera.pos.z,
-		0, 0, 0,        1     ,
+		right.x,    right.y,    right.z,    camera.pos.x,
+		up.x,       up.y,       up.z,       camera.pos.y,
+		dir.x,      dir.y,      dir.z,      camera.pos.z,
+		0,          0,          0,          1,
 	}
 	// odinfmt: enable
+
 	return look_at
 }
 
 make_camera :: proc() -> Camera {
-	return Camera{pos = {10, 10, 10}, target = {0, 0, 0}}
+	return Camera{pos = {0, 0, 10}, target = {0, 0, 0}}
 }
+
