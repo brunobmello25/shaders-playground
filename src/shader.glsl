@@ -6,7 +6,6 @@
 @vs vs
 
 in vec3 aPos;
-in vec3 aColor;
 in vec2 aTextCoord;
 
 layout (binding=0) uniform VSParams {
@@ -15,12 +14,10 @@ layout (binding=0) uniform VSParams {
 	mat4 projection;
 };
 
-out vec3 ourColor;
 out vec2 textCoord;
 
 void main () {
 	gl_Position = projection * view * model * vec4(aPos, 1.0);
-	ourColor = aColor;
 	textCoord = aTextCoord;
 }
 
@@ -28,7 +25,6 @@ void main () {
 
 @fs fs
 
-in vec3 ourColor;
 in vec2 textCoord;
 
 out vec4 fragColor;

@@ -23,32 +23,68 @@ range_from_slice :: proc(vertices: []$T) -> sg.Range {
 make_quad :: proc() -> Quad {
 	// odinfmt: disable
 	vertices_data := [dynamic]f32{
-	 0.5,  0.5, 0.0,    1.0, 0.0, 0.0,   1.0, 1.0,
-	 0.5, -0.5, 0.0,    0.0, 1.0, 0.0,   1.0, 0.0,
-	-0.5, -0.5, 0.0,    0.0, 0.0, 1.0,   0.0, 0.0,
-	-0.5,  0.5, 0.0,    1.0, 1.0, 0.0,   0.0, 1.0,
+	-0.5, -0.5, -0.5,  0.0, 0.0,
+     0.5, -0.5, -0.5,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 0.0,
+
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 1.0,
+     0.5,  0.5,  0.5,  1.0, 1.0,
+    -0.5,  0.5,  0.5,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+
+    -0.5,  0.5,  0.5,  1.0, 0.0,
+    -0.5,  0.5, -0.5,  1.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+    -0.5,  0.5,  0.5,  1.0, 0.0,
+
+     0.5,  0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5,  0.5,  0.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5, -0.5,  1.0, 1.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+
+    -0.5,  0.5, -0.5,  0.0, 1.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+    -0.5,  0.5,  0.5,  0.0, 0.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0
 	}
-	indices_data: [dynamic]u32 = {
-		0, 1, 2,
-		0, 2, 3,
-	}
+	// indices_data: [dynamic]u32 = {
+	// }
 	// odinfmt: enable
 
 	vertices_buffer := sg.make_buffer(
 		{data = range(vertices_data[:]), size = len(vertices_data) * size_of(vertices_data[0])},
 	)
-	indices_buffer := sg.make_buffer(
-		{
-			data = range(indices_data[:]),
-			size = len(indices_data) * size_of(indices_data[0]),
-			usage = {index_buffer = true},
-		},
-	)
+	// indices_buffer := sg.make_buffer(
+	// 	{
+	// 		data = range(indices_data[:]),
+	// 		size = len(indices_data) * size_of(indices_data[0]),
+	// 		usage = {index_buffer = true},
+	// 	},
+	// )
 
 	return Quad {
 		vertices = vertices_buffer,
-		indices = indices_buffer,
-		indices_count = len(indices_data),
+		indices = {},
+		vertex_count = 36,
+		indices_count = 0,
 	}
 }
 
