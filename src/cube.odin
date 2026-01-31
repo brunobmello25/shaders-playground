@@ -21,7 +21,7 @@ draw_many_cubes :: proc() {
 			linalg.matrix4_translate_f32(pos) *
 			linalg.matrix4_rotate_f32(math.to_radians(f32(angle)), rotvec)
 
-		view := camera_to_view(camera, Vec3{0, 1, 0})
+		view := camera_to_view(camera)
 
 		// fov := f32(45.0 + sin(stime.ms(stime.now()) * 0.0001) * 20.0)
 		fov := f32(45.0)

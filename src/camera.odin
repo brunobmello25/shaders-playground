@@ -1,27 +1,35 @@
 package main
 
-import stime "../sokol/time"
-import "core:math"
+import sapp "../sokol/app"
 import "core:math/linalg"
 
 Camera :: struct {
-	pos:    Vec3,
-	target: Vec3,
+	pos:   Vec3,
+	front: Vec3,
+	up:    Vec3,
 }
 
-camera_to_view :: proc(camera: Camera, world_up: Vec3) -> Mat4 {
-	return linalg.matrix4_look_at_f32(camera.pos, camera.target, world_up, false)
+camera_to_view :: proc(camera: Camera) -> Mat4 {
+	return linalg.matrix4_look_at_f32(camera.pos, camera.pos + camera.front, camera.up, false)
 }
 
 make_camera :: proc() -> Camera {
-	return Camera{pos = {0, 0, 3}, target = {0, 0, 0}}
+	return Camera{pos = {0, 0, 3}, front = {0, 0, -1}, up = {0, 1, 0}}
 }
 
 update_camera :: proc(camera: ^Camera) {
-	radius :: 30.0
+	camera_speed := f32(5 * sapp.frame_duration())
 
-	x := f32(radius * math.cos(stime.sec(stime.now())))
-	z := f32(radius * math.sin(stime.sec(stime.now())))
-
-	camera.pos = Vec3{x, camera.pos.y, z}
+	if is_action_down(.W) {
+		camera.pos += camera_speed * camera.front
+	}
+	if is_action_down(.S) {
+		camera.pos -= camera_speed * camera.front
+	}
+	if is_action_down(.A) {
+		camera.pos -= camera_speed * linalg.normalize0(linalg.cross(camera.front, camera.up))
+	}
+	if is_action_down(.D) {
+		camera.pos += camera_speed * linalg.normalize0(linalg.cross(camera.front, camera.up))
+	}
 }

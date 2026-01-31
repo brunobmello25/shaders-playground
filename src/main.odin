@@ -101,8 +101,18 @@ frame :: proc "c" () {
 	draw_many_cubes()
 
 	sg.end_pass()
+
+	if was_action_just_pressed(.SPACE) {
+		log.debug("Space key was just pressed")
+	} else if was_action_just_released(.SPACE) {
+		log.debug("Space key was just released")
+	}
+
+	update_key_states()
 }
 
 event :: proc "c" (event: ^sapp.Event) {
 	context = our_context
+
+	event_input(event)
 }
