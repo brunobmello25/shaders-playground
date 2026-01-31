@@ -33,7 +33,7 @@ draw_many_cubes :: proc() {
 			f32(viewWidth) / f32(viewHeight),
 			0.1,
 			100.0,
-			false,
+			true,
 		)
 		sg.apply_bindings(
 			{

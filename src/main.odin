@@ -117,6 +117,7 @@ frame :: proc "c" () {
 event :: proc "c" (event: ^sapp.Event) {
 	context = our_context
 
-	event_input(event)
+	update_input_maps(event)
+	update_mouse_delta(event)
 	toggle_mouse_lock()
 }

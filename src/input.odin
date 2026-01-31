@@ -44,8 +44,8 @@ update_key_states :: proc() {
 	}
 }
 
-event_input :: proc(event: ^sapp.Event) {
-	if event.type == .KEY_DOWN || event.type != .KEY_UP {
+update_input_maps :: proc(event: ^sapp.Event) {
+	if event.type == .KEY_DOWN || event.type == .KEY_UP {
 		keycode := event.key_code
 
 		input_map[keycode] = {
