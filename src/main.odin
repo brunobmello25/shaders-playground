@@ -51,6 +51,9 @@ main :: proc() {
 init :: proc "c" () {
 	context = our_context
 
+	sapp.lock_mouse(true)
+	sapp.show_mouse(false)
+
 	stime.setup()
 
 	sg.setup(
@@ -115,4 +118,5 @@ event :: proc "c" (event: ^sapp.Event) {
 	context = our_context
 
 	event_input(event)
+	toggle_mouse_lock()
 }
