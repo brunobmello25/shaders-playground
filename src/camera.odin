@@ -1,5 +1,7 @@
 package main
 
+import stime "../sokol/time"
+import "core:math"
 import "core:math/linalg"
 
 Camera :: struct {
@@ -8,23 +10,18 @@ Camera :: struct {
 }
 
 camera_to_view :: proc(camera: Camera, world_up: Vec3) -> Mat4 {
-	dir := linalg.normalize0(camera.pos - camera.target)
-	right := linalg.normalize0(linalg.cross(world_up, dir))
-	up := linalg.cross(dir, right)
-	
-	// odinfmt: disable
-	look_at := Mat4{
-		right.x,    right.y,    right.z,    camera.pos.x,
-		up.x,       up.y,       up.z,       camera.pos.y,
-		dir.x,      dir.y,      dir.z,      camera.pos.z,
-		0,          0,          0,          1,
-	}
-	// odinfmt: enable
-
-	return look_at
+	return linalg.matrix4_look_at_f32(camera.pos, camera.target, world_up, false)
 }
 
 make_camera :: proc() -> Camera {
-	return Camera{pos = {0, 0, 10}, target = {0, 0, 0}}
+	return Camera{pos = {0, 0, 3}, target = {0, 0, 0}}
 }
 
+update_camera :: proc(camera: ^Camera) {
+	radius :: 30.0
+
+	x := f32(radius * math.cos(stime.sec(stime.now())))
+	z := f32(radius * math.sin(stime.sec(stime.now())))
+
+	camera.pos = Vec3{x, camera.pos.y, z}
+}

@@ -85,7 +85,6 @@ cleanup :: proc "c" () {
 frame :: proc "c" () {
 	context = our_context
 
-
 	sg.begin_pass(
 		{
 			swapchain = sglue.swapchain(),
@@ -98,6 +97,7 @@ frame :: proc "c" () {
 	)
 	sg.apply_pipeline(pipeline)
 
+	update_camera(&camera)
 	draw_many_cubes()
 
 	sg.end_pass()
