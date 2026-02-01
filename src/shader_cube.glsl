@@ -29,7 +29,13 @@ layout (binding=1) uniform CubeFSParams {
 out vec4 fragColor;
 
 void main () {
-	fragColor = vec4(cubeColor * lightColor, 1.0);
+
+	float ambientStrength = 0.1;
+	vec3 ambient = ambientStrength * lightColor;
+
+	vec3 lightResult = ambient * cubeColor;
+
+	fragColor = vec4(lightResult, 1.0);
 }
 
 @end
