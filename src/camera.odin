@@ -18,8 +18,20 @@ make_camera :: proc() -> Camera {
 	return Camera{pos = {0, 0, 3}, front = {0, 0, -1}, up = {0, 1, 0}, yaw = -90, pitch = 0}
 }
 
-camera_to_view :: proc(camera: Camera) -> Mat4 {
-	return linalg.matrix4_look_at_f32(camera.pos, camera.pos + camera.front, camera.up, true)
+view_and_projection :: proc() -> (Mat4, Mat4) {
+	view := linalg.matrix4_look_at_f32(
+		global_camera.pos,
+		global_camera.pos + global_camera.front,
+		global_camera.up,
+		true,
+	)
+	fov := f32(45.0)
+
+	viewWidth := sapp.width()
+	viewHeight := sapp.height()
+	proj := linalg.matrix4_perspective_f32(fov, f32(viewWidth) / f32(viewHeight), 0.1, 100.0, true)
+
+	return view, proj
 }
 
 update_camera :: proc(camera: ^Camera) {

@@ -4,106 +4,90 @@ package main
 
 import "core:math"
 
-import sapp "../sokol/app"
 import sg "../sokol/gfx"
 import stime "../sokol/time"
 import linalg "core:math/linalg"
 
-cube: Model
-draw_many_cubes :: proc() {
-	cube_positions: [dynamic][3]f32 = {{0.0, 0.0, 0.0}, {7.0, 0.0, 0.0}, {-7.0, 4.0, 0.0}}
 
-	for pos in cube_positions {
-		angle := f32(stime.ms(stime.now()) * 0.1)
+global_cube_model: Model
+cube_pos: Vec3 = {0.0, 0.0, 0.0}
 
-		rotvec := linalg.normalize0([3]f32{1.0, 1.0, 0.0})
-		model :=
-			linalg.matrix4_translate_f32(pos) *
-			linalg.matrix4_rotate_f32(math.to_radians(f32(angle)), rotvec)
+draw_cube :: proc() {
+	angle := f32(stime.ms(stime.now()) * 0.1)
+	rotvec := linalg.normalize0([3]f32{1.0, 1.0, 0.0})
 
-		view := camera_to_view(camera)
+	model :=
+		linalg.matrix4_translate_f32(cube_pos) *
+		linalg.matrix4_rotate_f32(math.to_radians(f32(angle)), rotvec)
 
-		// fov := f32(45.0 + sin(stime.ms(stime.now()) * 0.0001) * 20.0)
-		fov := f32(45.0)
+	view, proj := view_and_projection()
 
-		viewWidth := sapp.width()
-		viewHeight := sapp.height()
-		proj := linalg.matrix4_perspective_f32(
-			fov,
-			f32(viewWidth) / f32(viewHeight),
-			0.1,
-			100.0,
-			true,
-		)
-		sg.apply_bindings(
-			{
-				vertex_buffers = {0 = cube.vertices},
-				// index_buffer = quad.indices,
-				views = {
-					VIEW_containerTexture = containerTexture.view,
-					VIEW_faceTexture = faceTexture.view,
-				},
-				samplers = {
-					SMP_containerTextureSampler = containerTexture.sampler,
-					SMP_faceTextureSampler = faceTexture.sampler,
-				},
-			},
-		)
-		params := Vsparams {
-			model      = model,
-			view       = view,
-			projection = proj,
-		}
-		sg.apply_uniforms(UB_VSParams, range(&params))
-
-		sg.draw(0, cube.vertex_count, 1)
+	sg.apply_pipeline(cube_shader.pipeline)
+	sg.apply_bindings(
+		{
+			vertex_buffers = {0 = global_cube_model.vertices},
+			// index_buffer = quad.indices,
+		},
+	)
+	vs_params := Cubevsparams {
+		model      = model,
+		view       = view,
+		projection = proj,
 	}
+	sg.apply_uniforms(UB_CubeVSParams, range(&vs_params))
+	fs_params := Cubefsparams {
+		cubeColor  = Vec3{1.0, 0.5, 0.31},
+		lightColor = Vec3{1.0, 1.0, 1.0},
+	}
+	sg.apply_uniforms(UB_CubeFSParams, range(&fs_params))
+
+	sg.draw(0, global_cube_model.vertex_count, 1)
 }
 
 make_cube :: proc() -> Model {
 	// odinfmt: disable
 	vertices_data := [dynamic]f32{
-		-0.5, -0.5, -0.5,  0.0, 0.0,
-		 0.5, -0.5, -0.5,  1.0, 0.0,
-		 0.5,  0.5, -0.5,  1.0, 1.0,
-		 0.5,  0.5, -0.5,  1.0, 1.0,
-		-0.5,  0.5, -0.5,  0.0, 1.0,
-		-0.5, -0.5, -0.5,  0.0, 0.0,
+		-0.5, -0.5, -0.5,
+		 0.5, -0.5, -0.5,
+		 0.5,  0.5, -0.5,
+		 0.5,  0.5, -0.5,
+		-0.5,  0.5, -0.5,
+		-0.5, -0.5, -0.5,
 
-		-0.5, -0.5,  0.5,  0.0, 0.0,
-		 0.5, -0.5,  0.5,  1.0, 0.0,
-		 0.5,  0.5,  0.5,  1.0, 1.0,
-		 0.5,  0.5,  0.5,  1.0, 1.0,
-		-0.5,  0.5,  0.5,  0.0, 1.0,
-		-0.5, -0.5,  0.5,  0.0, 0.0,
+		-0.5, -0.5,  0.5,
+		 0.5, -0.5,  0.5,
+		 0.5,  0.5,  0.5,
+		 0.5,  0.5,  0.5,
+		-0.5,  0.5,  0.5,
+		-0.5, -0.5,  0.5,
 
-		-0.5,  0.5,  0.5,  1.0, 0.0,
-		-0.5,  0.5, -0.5,  1.0, 1.0,
-		-0.5, -0.5, -0.5,  0.0, 1.0,
-		-0.5, -0.5, -0.5,  0.0, 1.0,
-		-0.5, -0.5,  0.5,  0.0, 0.0,
-		-0.5,  0.5,  0.5,  1.0, 0.0,
+		-0.5,  0.5,  0.5,
+		-0.5,  0.5, -0.5,
+		-0.5, -0.5, -0.5,
+		-0.5, -0.5, -0.5,
+		-0.5, -0.5,  0.5,
+		-0.5,  0.5,  0.5,
 
-		 0.5,  0.5,  0.5,  1.0, 0.0,
-		 0.5,  0.5, -0.5,  1.0, 1.0,
-		 0.5, -0.5, -0.5,  0.0, 1.0,
-		 0.5, -0.5, -0.5,  0.0, 1.0,
-		 0.5, -0.5,  0.5,  0.0, 0.0,
-		 0.5,  0.5,  0.5,  1.0, 0.0,
+		 0.5,  0.5,  0.5,
+		 0.5,  0.5, -0.5,
+		 0.5, -0.5, -0.5,
+		 0.5, -0.5, -0.5,
+		 0.5, -0.5,  0.5,
+		 0.5,  0.5,  0.5,
 
-		-0.5, -0.5, -0.5,  0.0, 1.0,
-		 0.5, -0.5, -0.5,  1.0, 1.0,
-		 0.5, -0.5,  0.5,  1.0, 0.0,
-		 0.5, -0.5,  0.5,  1.0, 0.0,
-		-0.5, -0.5,  0.5,  0.0, 0.0,
-		-0.5, -0.5, -0.5,  0.0, 1.0,
+		-0.5, -0.5, -0.5,
+		 0.5, -0.5, -0.5,
+		 0.5, -0.5,  0.5,
+		 0.5, -0.5,  0.5,
+		-0.5, -0.5,  0.5,
+		-0.5, -0.5, -0.5,
 
-		-0.5,  0.5, -0.5,  0.0, 1.0,
-		 0.5,  0.5, -0.5,  1.0, 1.0,
-		 0.5,  0.5,  0.5,  1.0, 0.0,
-		 0.5,  0.5,  0.5,  1.0, 0.0,
-		-0.5,  0.5,  0.5,  0.0, 0.0,
-		-0.5,  0.5, -0.5,  0.0, 1.0
+		-0.5,  0.5, -0.5,
+		 0.5,  0.5, -0.5,
+		 0.5,  0.5,  0.5,
+		 0.5,  0.5,  0.5,
+		-0.5,  0.5,  0.5,
+		-0.5,  0.5, -0.5,
 	}
 	// indices_data: [dynamic]u32 = {
 	// }

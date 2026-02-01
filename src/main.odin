@@ -10,7 +10,9 @@ import shelpers "../sokol/helpers"
 import stime "../sokol/time"
 
 our_context: runtime.Context
-pipeline: sg.Pipeline
+
+cube_shader: Shader
+light_shader: Shader
 
 Model :: struct {
 	vertices:      sg.Buffer,
@@ -25,7 +27,7 @@ Texture :: struct {
 	view:    sg.View,
 }
 
-camera: Camera
+global_camera: Camera
 containerTexture: Texture
 faceTexture: Texture
 
@@ -61,23 +63,12 @@ init :: proc "c" () {
 		{environment = sglue.environment(), logger = sg.Logger(shelpers.logger(&our_context))},
 	)
 
-	shader := sg.make_shader(main_shader_desc(sg.query_backend()))
-	pipeline = sg.make_pipeline(
-		{
-			shader = shader,
-			layout = {
-				attrs = {
-					ATTR_main_aPos = {format = .FLOAT3},
-					ATTR_main_aTextCoord = {format = .FLOAT2},
-				},
-			},
-			// index_type = .UINT32,
-			depth = {compare = .LESS_EQUAL, write_enabled = true},
-		},
-	)
+	cube_shader = load_shader(.Cube)
+	light_shader = load_shader(.Light)
 
-	camera = make_camera()
-	cube = make_cube()
+	global_camera = make_camera()
+	global_cube_model = make_cube()
+	global_light_model = make_cube()
 	containerTexture = load_texture("res/container.jpg")
 	faceTexture = load_texture("res/awesomeface.png")
 }
@@ -99,10 +90,10 @@ frame :: proc "c" () {
 			},
 		},
 	)
-	sg.apply_pipeline(pipeline)
 
-	update_camera(&camera)
-	draw_many_cubes()
+	update_camera(&global_camera)
+	draw_cube()
+	draw_light()
 
 	sg.end_pass()
 

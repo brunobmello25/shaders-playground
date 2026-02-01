@@ -14,7 +14,10 @@ fi
 
 if [ "$BUILD_SHADERS" = "true" ]; then
 	pushd ./src
-	../bin/sokol-shdc --input ./shader.glsl --output ./shader_generated.odin --slang glsl430:glsl300es --format sokol_odin
+	for shader in ./shader_*.glsl; do
+		name="${shader%.glsl}"
+		../bin/sokol-shdc --input "$shader" --output "${name}_generated.odin" --slang glsl430:glsl300es --format sokol_odin
+	done
 	popd
 fi
 
