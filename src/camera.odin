@@ -39,26 +39,28 @@ update_camera :: proc(camera: ^Camera) {
 		camera.pos += camera_speed * linalg.normalize0(linalg.cross(camera.front, camera.up))
 	}
 
-	x_offset := mouse_delta.x * mouse_sensitivity
-	y_offset := mouse_delta.y * mouse_sensitivity
+	if is_mouse_locked {
+		x_offset := mouse_delta.x * mouse_sensitivity
+		y_offset := mouse_delta.y * mouse_sensitivity
 
-	camera.yaw += x_offset
-	camera.pitch -= y_offset
+		camera.yaw += x_offset
+		camera.pitch -= y_offset
 
-	if camera.pitch > 89 {
-		camera.pitch = 89
+		if camera.pitch > 89 {
+			camera.pitch = 89
+		}
+		if camera.pitch < -89 {
+			camera.pitch = -89
+		}
+
+		new_direction: Vec3
+		new_direction.x =
+			math.cos(math.to_radians(camera.yaw)) * math.cos(math.to_radians(camera.pitch))
+		new_direction.y = math.sin(math.to_radians(camera.pitch))
+		new_direction.z =
+			math.sin(math.to_radians(camera.yaw)) * math.cos(math.to_radians(camera.pitch))
+		camera.front = linalg.normalize0(new_direction)
 	}
-	if camera.pitch < -89 {
-		camera.pitch = -89
-	}
-
-	new_direction: Vec3
-	new_direction.x =
-		math.cos(math.to_radians(camera.yaw)) * math.cos(math.to_radians(camera.pitch))
-	new_direction.y = math.sin(math.to_radians(camera.pitch))
-	new_direction.z =
-		math.sin(math.to_radians(camera.yaw)) * math.cos(math.to_radians(camera.pitch))
-	camera.front = linalg.normalize0(new_direction)
 
 	mouse_delta = {0, 0}
 }

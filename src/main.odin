@@ -53,6 +53,7 @@ init :: proc "c" () {
 
 	sapp.lock_mouse(true)
 	sapp.show_mouse(false)
+	is_mouse_locked = true
 
 	stime.setup()
 
