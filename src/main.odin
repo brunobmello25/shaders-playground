@@ -22,6 +22,13 @@ Vec4 :: [4]f32
 Vec3 :: [3]f32
 Vec2 :: [2]f32
 
+Light :: struct {
+	position: Vec3,
+	ambient:  Vec3,
+	diffuse:  Vec3,
+	specular: Vec3,
+}
+
 Model :: struct {
 	vertices:      sg.Buffer,
 	indices:       sg.Buffer,
@@ -85,6 +92,13 @@ init :: proc "c" () {
 	global_camera = make_camera()
 	global_cube_model = make_cube()
 	global_light_model = make_cube()
+
+	global_light = Light {
+		position = {1.2, 1.0, 2.0},
+		ambient  = {0.2, 0.2, 0.2},
+		diffuse  = {0.5, 0.5, 0.5},
+		specular = {1.0, 1.0, 1.0},
+	}
 	containerTexture = load_texture("res/container.jpg")
 	faceTexture = load_texture("res/awesomeface.png")
 }
@@ -108,6 +122,7 @@ frame :: proc "c" () {
 	)
 
 	update_camera(&global_camera)
+	update_light_color_over_time()
 	draw_cube()
 	draw_light()
 
@@ -400,11 +415,23 @@ draw_cube :: proc() {
 	}
 	sg.apply_uniforms(UB_CubeVSParams, range(&vs_params))
 	fs_params := Cubefsparams {
-		cubeColor  = Vec3{1.0, 0.5, 0.31},
-		lightColor = Vec3{1.0, 1.0, 1.0},
-		lightPos   = light_pos,
+		viewPos = global_camera.pos,
 	}
 	sg.apply_uniforms(UB_CubeFSParams, range(&fs_params))
+	cube_fs_material := Cubefsmaterial {
+		ambient   = {1.0, 0.5, 0.31},
+		diffuse   = {1.0, 0.5, 0.31},
+		specular  = {0.5, 0.5, 0.5},
+		shininess = 32.0,
+	}
+	sg.apply_uniforms(UB_CubeFSMaterial, range(&cube_fs_material))
+	cube_fs_light := Cubefslight {
+		position = global_light.position,
+		ambient  = global_light.ambient,
+		diffuse  = global_light.diffuse,
+		specular = global_light.specular,
+	}
+	sg.apply_uniforms(UB_CubeFSLight, range(&cube_fs_light))
 
 	sg.draw(0, global_cube_model.vertex_count, 1)
 }
@@ -475,11 +502,24 @@ make_cube :: proc() -> Model {
 // :light
 
 global_light_model: Model
-light_pos: Vec3 = {1, 2, 1}
+global_light: Light
+
+update_light_color_over_time :: proc() {
+	time := stime.sec(stime.now())
+	light_color: Vec3
+
+	light_color.x = f32(math.sin(time * 2))
+	light_color.y = f32(math.sin(time * 0.7))
+	light_color.z = f32(math.sin(time * 1.3))
+
+	global_light.diffuse = light_color * Vec3{0.5, 0.5, 0.5}
+	global_light.ambient = global_light.diffuse * Vec3{0.2, 0.2, 0.2}
+}
 
 draw_light :: proc() {
 	model :=
-		linalg.matrix4_translate_f32(light_pos) * linalg.matrix4_scale_f32(Vec3{0.2, 0.2, 0.2}) // TODO: pq caraios ta estranho quando bota esse scale aqui?
+		linalg.matrix4_translate_f32(global_light.position) *
+		linalg.matrix4_scale_f32(Vec3{0.2, 0.2, 0.2}) // TODO: pq caraios ta estranho quando bota esse scale aqui?
 
 	view, proj := view_and_projection()
 
@@ -492,6 +532,10 @@ draw_light :: proc() {
 		projection = proj,
 	}
 	sg.apply_uniforms(UB_LightVSParams, range(&vs_params))
+	fs_params := Lightfsparams {
+		lightColor = global_light.diffuse,
+	}
+	sg.apply_uniforms(UB_LightFSParams, range(&fs_params))
 
 	sg.draw(0, global_light_model.vertex_count, 1)
 }

@@ -34,33 +34,42 @@ in vec3 fragWorldPos;
 out vec4 fragColor;
 
 layout (binding=1) uniform CubeFSParams {
-	vec3 cubeColor;
-	vec3 lightColor;
-	vec3 lightPos;
 	vec3 viewPos;
 };
+
+layout (binding=2) uniform CubeFSMaterial {
+	vec3 ambient;
+	vec3 diffuse;
+	vec3 specular;
+	float shininess;
+} material;
+
+layout (binding=3) uniform CubeFSLight {
+	vec3 position;
+
+	vec3 ambient;
+	vec3 diffuse;
+	vec3 specular;
+} light;
 
 void main () {
 
 	// ambient
-	float ambientStrength = 0.1;
-	vec3 ambient = ambientStrength * lightColor;
+	vec3 ambient = light.ambient * material.ambient;
 
 	// diffuse
 	vec3 norm = normalize(normal);
-	vec3 lightDir = normalize(lightPos - fragWorldPos);
+	vec3 lightDir = normalize(light.position - fragWorldPos);
 	float diff = max(dot(norm, lightDir), 0.0);
-	vec3 diffuse = diff * lightColor;
+	vec3 diffuse = light.diffuse * (diff * material.diffuse);
 
 	// specular
-	float specularIntensity = 0.5;
 	vec3 viewDir = normalize(viewPos - fragWorldPos);
 	vec3 reflectDir = reflect(-lightDir, norm);
-	float shininess = 32.0;
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-	vec3 specular = specularIntensity * spec * lightColor;
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+	vec3 specular = light.specular * (spec * material.specular);
 
-	vec3 result = (ambient + diffuse + specular) * cubeColor;
+	vec3 result = ambient + diffuse + specular;
 
 	fragColor = vec4(result, 1.0);
 }

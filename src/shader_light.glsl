@@ -21,10 +21,14 @@ void main () {
 
 @fs fs
 
+layout (binding=1) uniform LightFSParams {
+	vec3 lightColor;
+};
+
 out vec4 fragColor;
 
 void main () {
-	fragColor = vec4(1,1,1,1);
+	fragColor = vec4(lightColor, 1.0);
 }
 
 @end
