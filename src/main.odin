@@ -273,11 +273,12 @@ load_shader :: proc(kind: ShaderKind) -> Shader {
 	case .Cube:
 		desc = cube_shader_desc(sg.query_backend())
 		layout = {
-			attrs = {ATTR_cube_aPos = {format = .FLOAT3}},
+			attrs = {ATTR_cube_aPos = {format = .FLOAT3}, ATTR_cube_aNormal = {format = .FLOAT3}},
 		}
 	case .Light:
 		desc = light_shader_desc(sg.query_backend())
 		layout = {
+			buffers = {0 = {stride = size_of(f32) * 3 * 2}},
 			attrs = {ATTR_light_aPos = {format = .FLOAT3}},
 		}
 	}
@@ -379,12 +380,8 @@ global_cube_model: Model
 cube_pos: Vec3 = {0.0, 0.0, 0.0}
 
 draw_cube :: proc() {
-	angle := f32(stime.ms(stime.now()) * 0.1)
-	rotvec := linalg.normalize0([3]f32{1.0, 1.0, 0.0})
-
-	model :=
-		linalg.matrix4_translate_f32(cube_pos) *
-		linalg.matrix4_rotate_f32(math.to_radians(f32(angle)), rotvec)
+	model := linalg.matrix4_translate_f32(cube_pos)
+	normal_matrix := linalg.transpose(linalg.inverse(model))
 
 	view, proj := view_and_projection()
 
@@ -396,14 +393,16 @@ draw_cube :: proc() {
 		},
 	)
 	vs_params := Cubevsparams {
-		model      = model,
-		view       = view,
-		projection = proj,
+		model        = model,
+		view         = view,
+		projection   = proj,
+		normalMatrix = normal_matrix,
 	}
 	sg.apply_uniforms(UB_CubeVSParams, range(&vs_params))
 	fs_params := Cubefsparams {
 		cubeColor  = Vec3{1.0, 0.5, 0.31},
 		lightColor = Vec3{1.0, 1.0, 1.0},
+		lightPos   = light_pos,
 	}
 	sg.apply_uniforms(UB_CubeFSParams, range(&fs_params))
 
@@ -413,47 +412,47 @@ draw_cube :: proc() {
 make_cube :: proc() -> Model {
 	// odinfmt: disable
 	vertices_data := [dynamic]f32{
-		-0.5, -0.5, -0.5,
-		 0.5, -0.5, -0.5,
-		 0.5,  0.5, -0.5,
-		 0.5,  0.5, -0.5,
-		-0.5,  0.5, -0.5,
-		-0.5, -0.5, -0.5,
+		-0.5, -0.5, -0.5,  0.0, 0.0, -1.0,
+		 0.5, -0.5, -0.5,  0.0, 0.0, -1.0,
+		 0.5,  0.5, -0.5,  0.0, 0.0, -1.0,
+		 0.5,  0.5, -0.5,  0.0, 0.0, -1.0,
+		-0.5,  0.5, -0.5,  0.0, 0.0, -1.0,
+		-0.5, -0.5, -0.5,  0.0, 0.0, -1.0,
 
-		-0.5, -0.5,  0.5,
-		 0.5, -0.5,  0.5,
-		 0.5,  0.5,  0.5,
-		 0.5,  0.5,  0.5,
-		-0.5,  0.5,  0.5,
-		-0.5, -0.5,  0.5,
+		-0.5, -0.5,  0.5,  0.0, 0.0, 1.0,
+		 0.5, -0.5,  0.5,  0.0, 0.0, 1.0,
+		 0.5,  0.5,  0.5,  0.0, 0.0, 1.0,
+		 0.5,  0.5,  0.5,  0.0, 0.0, 1.0,
+		-0.5,  0.5,  0.5,  0.0, 0.0, 1.0,
+		-0.5, -0.5,  0.5,  0.0, 0.0, 1.0,
 
-		-0.5,  0.5,  0.5,
-		-0.5,  0.5, -0.5,
-		-0.5, -0.5, -0.5,
-		-0.5, -0.5, -0.5,
-		-0.5, -0.5,  0.5,
-		-0.5,  0.5,  0.5,
+		-0.5,  0.5,  0.5, -1.0, 0.0, 0.0,
+		-0.5,  0.5, -0.5, -1.0, 0.0, 0.0,
+		-0.5, -0.5, -0.5, -1.0, 0.0, 0.0,
+		-0.5, -0.5, -0.5, -1.0, 0.0, 0.0,
+		-0.5, -0.5,  0.5, -1.0, 0.0, 0.0,
+		-0.5,  0.5,  0.5, -1.0, 0.0, 0.0,
 
-		 0.5,  0.5,  0.5,
-		 0.5,  0.5, -0.5,
-		 0.5, -0.5, -0.5,
-		 0.5, -0.5, -0.5,
-		 0.5, -0.5,  0.5,
-		 0.5,  0.5,  0.5,
+		 0.5,  0.5,  0.5,  1.0, 0.0, 0.0,
+		 0.5,  0.5, -0.5,  1.0, 0.0, 0.0,
+		 0.5, -0.5, -0.5,  1.0, 0.0, 0.0,
+		 0.5, -0.5, -0.5,  1.0, 0.0, 0.0,
+		 0.5, -0.5,  0.5,  1.0, 0.0, 0.0,
+		 0.5,  0.5,  0.5,  1.0, 0.0, 0.0,
 
-		-0.5, -0.5, -0.5,
-		 0.5, -0.5, -0.5,
-		 0.5, -0.5,  0.5,
-		 0.5, -0.5,  0.5,
-		-0.5, -0.5,  0.5,
-		-0.5, -0.5, -0.5,
+		-0.5, -0.5, -0.5,  0.0, -1.0, 0.0,
+		 0.5, -0.5, -0.5,  0.0, -1.0, 0.0,
+		 0.5, -0.5,  0.5,  0.0, -1.0, 0.0,
+		 0.5, -0.5,  0.5,  0.0, -1.0, 0.0,
+		-0.5, -0.5,  0.5,  0.0, -1.0, 0.0,
+		-0.5, -0.5, -0.5,  0.0, -1.0, 0.0,
 
-		-0.5,  0.5, -0.5,
-		 0.5,  0.5, -0.5,
-		 0.5,  0.5,  0.5,
-		 0.5,  0.5,  0.5,
-		-0.5,  0.5,  0.5,
-		-0.5,  0.5, -0.5,
+		-0.5,  0.5, -0.5,  0.0, 1.0, 0.0,
+		 0.5,  0.5, -0.5,  0.0, 1.0, 0.0,
+		 0.5,  0.5,  0.5,  0.0, 1.0, 0.0,
+		 0.5,  0.5,  0.5,  0.0, 1.0, 0.0,
+		-0.5,  0.5,  0.5,  0.0, 1.0, 0.0,
+		-0.5,  0.5, -0.5,  0.0, 1.0, 0.0,
 	}
 	// indices_data: [dynamic]u32 = {
 	// }
@@ -476,11 +475,11 @@ make_cube :: proc() -> Model {
 // :light
 
 global_light_model: Model
-light_pos: Vec3 = {5, 5, 5}
+light_pos: Vec3 = {1, 2, 1}
 
 draw_light :: proc() {
 	model :=
-		linalg.matrix4_scale_f32(Vec3{0.2, 0.2, 0.2}) * linalg.matrix4_translate_f32(light_pos)// TODO: pq caraios ta estranho quando bota esse scale aqui?
+		linalg.matrix4_translate_f32(light_pos) * linalg.matrix4_scale_f32(Vec3{0.2, 0.2, 0.2}) // TODO: pq caraios ta estranho quando bota esse scale aqui?
 
 	view, proj := view_and_projection()
 
