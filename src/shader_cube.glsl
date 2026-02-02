@@ -56,7 +56,8 @@ void main () {
 	float specularIntensity = 0.5;
 	vec3 viewDir = normalize(viewPos - fragWorldPos);
 	vec3 reflectDir = reflect(-lightDir, norm);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+	float shininess = 32.0;
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
 	vec3 specular = specularIntensity * spec * lightColor;
 
 	vec3 result = (ambient + diffuse + specular) * cubeColor;
