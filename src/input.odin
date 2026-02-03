@@ -15,6 +15,13 @@ Input :: struct {
 	},
 }
 
+toggle_mouse_lock :: proc(input: ^Input) {
+	if was_mouse_button_just_pressed(input^, .RIGHT) {
+		input.is_mouse_locked = !input.is_mouse_locked
+		sapp.lock_mouse(input.is_mouse_locked)
+		sapp.show_mouse(!input.is_mouse_locked)
+	}
+}
 
 was_action_just_pressed :: proc(input: Input, action: sapp.Keycode) -> bool {
 	return input.input_map[action].is_down && !input.input_map[action].was_down
