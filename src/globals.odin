@@ -7,12 +7,15 @@ Globals :: struct {
 	cube_shader:  shaders.Shader,
 	light_shader: shaders.Shader,
 
-	// models
+	// test cube
 	cube_model:   Model,
 	cube_pos:     Vec3,
 
 	// light
 	light:        Light,
+
+	//camera
+	camera:       Camera,
 }
 
 g: Globals
@@ -31,4 +34,6 @@ init_globals :: proc() {
 		specular = {1.0, 1.0, 1.0},
 		model    = make_cube(),
 	}
+
+	g.camera = make_camera()
 }

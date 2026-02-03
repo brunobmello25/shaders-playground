@@ -49,7 +49,6 @@ Texture :: struct {
 
 our_context: runtime.Context
 
-global_camera: Camera
 containerTexture: Texture
 faceTexture: Texture
 
@@ -88,8 +87,6 @@ init :: proc "c" () {
 
 	init_globals()
 
-	global_camera = make_camera()
-
 	containerTexture = load_texture("res/container.jpg")
 	faceTexture = load_texture("res/awesomeface.png")
 }
@@ -112,10 +109,10 @@ frame :: proc "c" () {
 		},
 	)
 
-	update_camera(&global_camera)
-	update_light_color_over_time()
-	draw_cube()
-	draw_light()
+	update_camera(&g.camera)
+	update_light_color_over_time(&g.light)
+	draw_cube(g.camera)
+	draw_light(g.camera)
 
 	sg.end_pass()
 
@@ -277,13 +274,8 @@ make_camera :: proc() -> Camera {
 	return Camera{pos = {0, 0, 3}, front = {0, 0, -1}, up = {0, 1, 0}, yaw = -90, pitch = 0}
 }
 
-view_and_projection :: proc() -> (Mat4, Mat4) {
-	view := linalg.matrix4_look_at_f32(
-		global_camera.pos,
-		global_camera.pos + global_camera.front,
-		global_camera.up,
-		true,
-	)
+view_and_projection :: proc(camera: Camera) -> (Mat4, Mat4) {
+	view := linalg.matrix4_look_at_f32(camera.pos, camera.pos + camera.front, camera.up, true)
 	fov := f32(45.0)
 
 	viewWidth := sapp.width()
@@ -345,11 +337,11 @@ update_mouse_delta :: proc(event: ^sapp.Event) {
 
 // :cube
 
-draw_cube :: proc() {
+draw_cube :: proc(camera: Camera) {
 	model := linalg.matrix4_translate_f32(g.cube_pos)
 	normal_matrix := linalg.transpose(linalg.inverse(model))
 
-	view, proj := view_and_projection()
+	view, proj := view_and_projection(camera)
 
 	sg.apply_pipeline(g.cube_shader.pipeline)
 	sg.apply_bindings(
@@ -366,7 +358,7 @@ draw_cube :: proc() {
 	}
 	sg.apply_uniforms(shaders.UB_CubeVSParams, range(&vs_params))
 	fs_params := shaders.Cubefsparams {
-		viewPos = global_camera.pos,
+		viewPos = camera.pos,
 	}
 	sg.apply_uniforms(shaders.UB_CubeFSParams, range(&fs_params))
 	cube_fs_material := shaders.Cubefsmaterial {
@@ -452,7 +444,7 @@ make_cube :: proc() -> Model {
 
 // :light
 
-update_light_color_over_time :: proc() {
+update_light_color_over_time :: proc(light: ^Light) {
 	time := stime.sec(stime.now())
 	light_color: Vec3
 
@@ -460,16 +452,16 @@ update_light_color_over_time :: proc() {
 	light_color.y = f32(math.sin(time * 0.7))
 	light_color.z = f32(math.sin(time * 1.3))
 
-	g.light.diffuse = light_color * Vec3{0.5, 0.5, 0.5}
-	g.light.ambient = g.light.diffuse * Vec3{0.2, 0.2, 0.2}
+	light.diffuse = light_color * Vec3{0.5, 0.5, 0.5}
+	light.ambient = light.diffuse * Vec3{0.2, 0.2, 0.2}
 }
 
-draw_light :: proc() {
+draw_light :: proc(camera: Camera) {
 	model :=
 		linalg.matrix4_translate_f32(g.light.position) *
 		linalg.matrix4_scale_f32(Vec3{0.2, 0.2, 0.2}) // TODO: pq caraios ta estranho quando bota esse scale aqui?
 
-	view, proj := view_and_projection()
+	view, proj := view_and_projection(camera)
 
 	sg.apply_pipeline(g.light_shader.pipeline)
 	sg.apply_bindings({vertex_buffers = {0 = g.light.model.vertices}})
