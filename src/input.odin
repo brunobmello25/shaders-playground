@@ -38,8 +38,8 @@ is_action_down :: proc(input: Input, action: sapp.Keycode) -> bool {
 
 update_mouse_delta :: proc(event: ^sapp.Event, input: ^Input) {
 	if event.type == .MOUSE_MOVE {
-		input.mouse_delta.x = f32(event.mouse_dx)
-		input.mouse_delta.y = f32(event.mouse_dy)
+		input.mouse_delta.x += f32(event.mouse_dx)
+		input.mouse_delta.y += f32(event.mouse_dy)
 	}
 }
 
