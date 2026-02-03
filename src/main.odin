@@ -49,9 +49,6 @@ Texture :: struct {
 
 our_context: runtime.Context
 
-containerTexture: Texture
-faceTexture: Texture
-
 // :main
 
 main :: proc() {
@@ -86,9 +83,6 @@ init :: proc "c" () {
 	)
 
 	init_globals()
-
-	containerTexture = load_texture("res/container.jpg")
-	faceTexture = load_texture("res/awesomeface.png")
 }
 
 cleanup :: proc "c" () {
