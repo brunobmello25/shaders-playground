@@ -29,6 +29,7 @@ Light :: struct {
 	ambient:  Vec3,
 	diffuse:  Vec3,
 	specular: Vec3,
+	model:    Model,
 }
 
 Model :: struct {
@@ -47,9 +48,6 @@ Texture :: struct {
 // :globals
 
 our_context: runtime.Context
-
-cube_shader: Shader
-light_shader: Shader
 
 global_camera: Camera
 containerTexture: Texture
@@ -88,19 +86,10 @@ init :: proc "c" () {
 		{environment = sglue.environment(), logger = sg.Logger(shelpers.logger(&our_context))},
 	)
 
-	cube_shader = load_shader(.Cube)
-	light_shader = load_shader(.Light)
+	init_globals()
 
 	global_camera = make_camera()
-	global_cube_model = make_cube()
-	global_light_model = make_cube()
 
-	global_light = Light {
-		position = {1.2, 1.0, 2.0},
-		ambient  = {0.2, 0.2, 0.2},
-		diffuse  = {0.5, 0.5, 0.5},
-		specular = {1.0, 1.0, 1.0},
-	}
 	containerTexture = load_texture("res/container.jpg")
 	faceTexture = load_texture("res/awesomeface.png")
 }
@@ -272,43 +261,6 @@ toggle_mouse_lock :: proc() {
 
 // :shader
 
-Shader :: struct {
-	kind:     ShaderKind,
-	pipeline: sg.Pipeline,
-}
-
-ShaderKind :: enum {
-	Cube,
-	Light,
-}
-
-load_shader :: proc(kind: ShaderKind) -> Shader {
-	desc: sg.Shader_Desc
-	layout: sg.Vertex_Layout_State
-
-	switch kind {
-	case .Cube:
-		desc = shaders.cube_shader_desc(sg.query_backend())
-		layout = {
-			attrs = {shaders.ATTR_cube_aPos = {format = .FLOAT3}, shaders.ATTR_cube_aNormal = {format = .FLOAT3}},
-		}
-	case .Light:
-		desc = shaders.light_shader_desc(sg.query_backend())
-		layout = {
-			buffers = {0 = {stride = size_of(f32) * 3 * 2}},
-			attrs = {shaders.ATTR_light_aPos = {format = .FLOAT3}},
-		}
-	}
-
-
-	shader := sg.make_shader(desc)
-	pipeline := sg.make_pipeline(
-		{shader = shader, layout = layout, depth = {compare = .LESS_EQUAL, write_enabled = true}},
-	)
-
-	return Shader{kind = kind, pipeline = pipeline}
-}
-
 // :camera
 
 mouse_delta: Vec2
@@ -393,19 +345,16 @@ update_mouse_delta :: proc(event: ^sapp.Event) {
 
 // :cube
 
-global_cube_model: Model
-cube_pos: Vec3 = {0.0, 0.0, 0.0}
-
 draw_cube :: proc() {
-	model := linalg.matrix4_translate_f32(cube_pos)
+	model := linalg.matrix4_translate_f32(g.cube_pos)
 	normal_matrix := linalg.transpose(linalg.inverse(model))
 
 	view, proj := view_and_projection()
 
-	sg.apply_pipeline(cube_shader.pipeline)
+	sg.apply_pipeline(g.cube_shader.pipeline)
 	sg.apply_bindings(
 		{
-			vertex_buffers = {0 = global_cube_model.vertices},
+			vertex_buffers = {0 = g.cube_model.vertices},
 			// index_buffer = quad.indices,
 		},
 	)
@@ -428,14 +377,14 @@ draw_cube :: proc() {
 	}
 	sg.apply_uniforms(shaders.UB_CubeFSMaterial, range(&cube_fs_material))
 	cube_fs_light := shaders.Cubefslight {
-		position = global_light.position,
-		ambient  = global_light.ambient,
-		diffuse  = global_light.diffuse,
-		specular = global_light.specular,
+		position = g.light.position,
+		ambient  = g.light.ambient,
+		diffuse  = g.light.diffuse,
+		specular = g.light.specular,
 	}
 	sg.apply_uniforms(shaders.UB_CubeFSLight, range(&cube_fs_light))
 
-	sg.draw(0, global_cube_model.vertex_count, 1)
+	sg.draw(0, g.cube_model.vertex_count, 1)
 }
 
 make_cube :: proc() -> Model {
@@ -503,9 +452,6 @@ make_cube :: proc() -> Model {
 
 // :light
 
-global_light_model: Model
-global_light: Light
-
 update_light_color_over_time :: proc() {
 	time := stime.sec(stime.now())
 	light_color: Vec3
@@ -514,19 +460,19 @@ update_light_color_over_time :: proc() {
 	light_color.y = f32(math.sin(time * 0.7))
 	light_color.z = f32(math.sin(time * 1.3))
 
-	global_light.diffuse = light_color * Vec3{0.5, 0.5, 0.5}
-	global_light.ambient = global_light.diffuse * Vec3{0.2, 0.2, 0.2}
+	g.light.diffuse = light_color * Vec3{0.5, 0.5, 0.5}
+	g.light.ambient = g.light.diffuse * Vec3{0.2, 0.2, 0.2}
 }
 
 draw_light :: proc() {
 	model :=
-		linalg.matrix4_translate_f32(global_light.position) *
+		linalg.matrix4_translate_f32(g.light.position) *
 		linalg.matrix4_scale_f32(Vec3{0.2, 0.2, 0.2}) // TODO: pq caraios ta estranho quando bota esse scale aqui?
 
 	view, proj := view_and_projection()
 
-	sg.apply_pipeline(light_shader.pipeline)
-	sg.apply_bindings({vertex_buffers = {0 = global_light_model.vertices}})
+	sg.apply_pipeline(g.light_shader.pipeline)
+	sg.apply_bindings({vertex_buffers = {0 = g.light.model.vertices}})
 
 	vs_params := shaders.Lightvsparams {
 		model      = model,
@@ -535,9 +481,9 @@ draw_light :: proc() {
 	}
 	sg.apply_uniforms(shaders.UB_LightVSParams, range(&vs_params))
 	fs_params := shaders.Lightfsparams {
-		lightColor = global_light.diffuse,
+		lightColor = g.light.diffuse,
 	}
 	sg.apply_uniforms(shaders.UB_LightFSParams, range(&fs_params))
 
-	sg.draw(0, global_light_model.vertex_count, 1)
+	sg.draw(0, g.light.model.vertex_count, 1)
 }
