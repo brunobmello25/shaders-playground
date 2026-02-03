@@ -16,6 +16,9 @@ Globals :: struct {
 
 	//camera
 	camera:       Camera,
+
+	// input
+	input:        Input,
 }
 
 g: Globals

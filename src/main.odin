@@ -77,7 +77,7 @@ init :: proc "c" () {
 
 	sapp.lock_mouse(true)
 	sapp.show_mouse(false)
-	is_mouse_locked = true
+	g.input.is_mouse_locked = true
 
 	stime.setup()
 
@@ -109,28 +109,28 @@ frame :: proc "c" () {
 		},
 	)
 
-	update_camera(&g.camera)
+	update_camera(&g.camera, &g.input)
 	update_light_color_over_time(&g.light)
 	draw_cube(g.camera)
 	draw_light(g.camera)
 
 	sg.end_pass()
 
-	if was_action_just_pressed(.SPACE) {
+	if was_action_just_pressed(g.input, .SPACE) {
 		log.debug("Space key was just pressed")
-	} else if was_action_just_released(.SPACE) {
+	} else if was_action_just_released(g.input, .SPACE) {
 		log.debug("Space key was just released")
 	}
 
-	update_key_states()
+	update_key_states(&g.input)
 }
 
 event :: proc "c" (event: ^sapp.Event) {
 	context = our_context
 
-	update_input_maps(event)
-	update_mouse_delta(event)
-	toggle_mouse_lock()
+	update_input_maps(event, &g.input)
+	update_mouse_delta(event, &g.input)
+	toggle_mouse_lock(&g.input)
 }
 
 // :helpers
@@ -186,81 +186,17 @@ load_texture :: proc(path: cstring) -> Texture {
 
 // :input
 
-is_mouse_locked: bool
-
-input_map: map[sapp.Keycode]struct {
-	is_down:  bool,
-	was_down: bool,
-}
-
-mouse_input_map: map[sapp.Mousebutton]struct {
-	is_down:  bool,
-	was_down: bool,
-}
-
-was_action_just_pressed :: proc(action: sapp.Keycode) -> bool {
-	return input_map[action].is_down && !input_map[action].was_down
-}
-
-was_action_just_released :: proc(action: sapp.Keycode) -> bool {
-	return !input_map[action].is_down && input_map[action].was_down
-}
-
-was_mouse_button_just_pressed :: proc(button: sapp.Mousebutton) -> bool {
-	return mouse_input_map[button].is_down && !mouse_input_map[button].was_down
-}
-
-was_mouse_button_just_released :: proc(button: sapp.Mousebutton) -> bool {
-	return !mouse_input_map[button].is_down && mouse_input_map[button].was_down
-}
-
-is_action_down :: proc(action: sapp.Keycode) -> bool {
-	return input_map[action].is_down
-}
-
-update_key_states :: proc() {
-	for _, &state in input_map {
-		state.was_down = state.is_down
-	}
-
-	for _, &state in mouse_input_map {
-		state.was_down = state.is_down
-	}
-}
-
-update_input_maps :: proc(event: ^sapp.Event) {
-	if event.type == .KEY_DOWN || event.type == .KEY_UP {
-		keycode := event.key_code
-
-		input_map[keycode] = {
-			is_down  = event.type == .KEY_DOWN,
-			was_down = input_map[keycode].is_down,
-		}
-	}
-
-	if event.type == .MOUSE_DOWN || event.type == .MOUSE_UP {
-		button := event.mouse_button
-
-		mouse_input_map[button] = {
-			is_down  = event.type == .MOUSE_DOWN,
-			was_down = mouse_input_map[button].is_down,
-		}
-	}
-}
-
-toggle_mouse_lock :: proc() {
-	if was_mouse_button_just_pressed(.RIGHT) {
-		is_mouse_locked = !is_mouse_locked
-		sapp.lock_mouse(is_mouse_locked)
-		sapp.show_mouse(!is_mouse_locked)
+toggle_mouse_lock :: proc(input: ^Input) {
+	if was_mouse_button_just_pressed(input^, .RIGHT) {
+		input.is_mouse_locked = !input.is_mouse_locked
+		sapp.lock_mouse(input.is_mouse_locked)
+		sapp.show_mouse(!input.is_mouse_locked)
 	}
 }
 
 // :shader
 
 // :camera
-
-mouse_delta: Vec2
 
 Camera :: struct {
 	pos:   Vec3,
@@ -285,26 +221,26 @@ view_and_projection :: proc(camera: Camera) -> (Mat4, Mat4) {
 	return view, proj
 }
 
-update_camera :: proc(camera: ^Camera) {
+update_camera :: proc(camera: ^Camera, input: ^Input) {
 	camera_speed := f32(5 * sapp.frame_duration())
 	mouse_sensitivity := f32(0.1)
 
-	if is_action_down(.W) {
+	if is_action_down(input^, .W) {
 		camera.pos += camera_speed * camera.front
 	}
-	if is_action_down(.S) {
+	if is_action_down(input^, .S) {
 		camera.pos -= camera_speed * camera.front
 	}
-	if is_action_down(.A) {
+	if is_action_down(input^, .A) {
 		camera.pos -= camera_speed * linalg.normalize0(linalg.cross(camera.front, camera.up))
 	}
-	if is_action_down(.D) {
+	if is_action_down(input^, .D) {
 		camera.pos += camera_speed * linalg.normalize0(linalg.cross(camera.front, camera.up))
 	}
 
-	if is_mouse_locked {
-		x_offset := mouse_delta.x * mouse_sensitivity
-		y_offset := mouse_delta.y * mouse_sensitivity
+	if input.is_mouse_locked {
+		x_offset := input.mouse_delta.x * mouse_sensitivity
+		y_offset := input.mouse_delta.y * mouse_sensitivity
 
 		camera.yaw += x_offset
 		camera.pitch -= y_offset
@@ -325,15 +261,9 @@ update_camera :: proc(camera: ^Camera) {
 		camera.front = linalg.normalize0(new_direction)
 	}
 
-	mouse_delta = {0, 0}
+	input.mouse_delta = {0, 0}
 }
 
-update_mouse_delta :: proc(event: ^sapp.Event) {
-	if event.type == .MOUSE_MOVE {
-		mouse_delta.x = f32(event.mouse_dx)
-		mouse_delta.y = f32(event.mouse_dy)
-	}
-}
 
 // :cube
 
