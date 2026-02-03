@@ -1,5 +1,5 @@
-@header package main;
-@header import sg "../sokol/gfx";
+@header package shaders;
+@header import sg "../../sokol/gfx";
 
 @ctype mat4 Mat4
 

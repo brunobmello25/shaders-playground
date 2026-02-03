@@ -15,6 +15,8 @@ import shelpers "../sokol/helpers"
 import stime "../sokol/time"
 import stbi "vendor:stb/image"
 
+import shaders "shaders"
+
 // :types
 
 Mat4 :: matrix[4, 4]f32
@@ -286,15 +288,15 @@ load_shader :: proc(kind: ShaderKind) -> Shader {
 
 	switch kind {
 	case .Cube:
-		desc = cube_shader_desc(sg.query_backend())
+		desc = shaders.cube_shader_desc(sg.query_backend())
 		layout = {
-			attrs = {ATTR_cube_aPos = {format = .FLOAT3}, ATTR_cube_aNormal = {format = .FLOAT3}},
+			attrs = {shaders.ATTR_cube_aPos = {format = .FLOAT3}, shaders.ATTR_cube_aNormal = {format = .FLOAT3}},
 		}
 	case .Light:
-		desc = light_shader_desc(sg.query_backend())
+		desc = shaders.light_shader_desc(sg.query_backend())
 		layout = {
 			buffers = {0 = {stride = size_of(f32) * 3 * 2}},
-			attrs = {ATTR_light_aPos = {format = .FLOAT3}},
+			attrs = {shaders.ATTR_light_aPos = {format = .FLOAT3}},
 		}
 	}
 
@@ -407,31 +409,31 @@ draw_cube :: proc() {
 			// index_buffer = quad.indices,
 		},
 	)
-	vs_params := Cubevsparams {
+	vs_params := shaders.Cubevsparams {
 		model        = model,
 		view         = view,
 		projection   = proj,
 		normalMatrix = normal_matrix,
 	}
-	sg.apply_uniforms(UB_CubeVSParams, range(&vs_params))
-	fs_params := Cubefsparams {
+	sg.apply_uniforms(shaders.UB_CubeVSParams, range(&vs_params))
+	fs_params := shaders.Cubefsparams {
 		viewPos = global_camera.pos,
 	}
-	sg.apply_uniforms(UB_CubeFSParams, range(&fs_params))
-	cube_fs_material := Cubefsmaterial {
+	sg.apply_uniforms(shaders.UB_CubeFSParams, range(&fs_params))
+	cube_fs_material := shaders.Cubefsmaterial {
 		ambient   = {1.0, 0.5, 0.31},
 		diffuse   = {1.0, 0.5, 0.31},
 		specular  = {0.5, 0.5, 0.5},
 		shininess = 32.0,
 	}
-	sg.apply_uniforms(UB_CubeFSMaterial, range(&cube_fs_material))
-	cube_fs_light := Cubefslight {
+	sg.apply_uniforms(shaders.UB_CubeFSMaterial, range(&cube_fs_material))
+	cube_fs_light := shaders.Cubefslight {
 		position = global_light.position,
 		ambient  = global_light.ambient,
 		diffuse  = global_light.diffuse,
 		specular = global_light.specular,
 	}
-	sg.apply_uniforms(UB_CubeFSLight, range(&cube_fs_light))
+	sg.apply_uniforms(shaders.UB_CubeFSLight, range(&cube_fs_light))
 
 	sg.draw(0, global_cube_model.vertex_count, 1)
 }
@@ -526,16 +528,16 @@ draw_light :: proc() {
 	sg.apply_pipeline(light_shader.pipeline)
 	sg.apply_bindings({vertex_buffers = {0 = global_light_model.vertices}})
 
-	vs_params := Lightvsparams {
+	vs_params := shaders.Lightvsparams {
 		model      = model,
 		view       = view,
 		projection = proj,
 	}
-	sg.apply_uniforms(UB_LightVSParams, range(&vs_params))
-	fs_params := Lightfsparams {
+	sg.apply_uniforms(shaders.UB_LightVSParams, range(&vs_params))
+	fs_params := shaders.Lightfsparams {
 		lightColor = global_light.diffuse,
 	}
-	sg.apply_uniforms(UB_LightFSParams, range(&fs_params))
+	sg.apply_uniforms(shaders.UB_LightFSParams, range(&fs_params))
 
 	sg.draw(0, global_light_model.vertex_count, 1)
 }
