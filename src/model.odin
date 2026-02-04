@@ -60,6 +60,22 @@ load_texture :: proc(path: cstring) -> Texture {
 	return Texture{image = image, sampler = sampler, view = view}
 }
 
+draw_model :: proc(
+	model: Model,
+	camera: Camera,
+	shader: shaders.Shader,
+	pos: Vec3 = {0, 0, 0},
+	scale: Vec3 = {1, 1, 1},
+) {
+	model_matrix := linalg.matrix4_translate_f32(pos) * linalg.matrix4_scale_f32(scale)
+	normal_matrix := linalg.transpose(linalg.inverse(model_matrix))
+
+	view, proj := view_and_projection(camera)
+
+	sg.apply_pipeline(shader.pipeline)
+	sg.apply_bindings({vertex_buffers = {0 = model.vertices}, views = {}, samplers = {}}) // TODO: how to generalize this?
+}
+
 // TODO: generalize this into a draw_model function that takes in
 // a shader, a position, a model, and whatever else is needed
 draw_cube :: proc(camera: Camera) {

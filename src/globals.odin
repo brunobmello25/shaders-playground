@@ -4,7 +4,7 @@ import "./shaders"
 
 Globals :: struct {
 	//shaders
-	cube_shader:          shaders.Shader,
+	entity_shader:        shaders.Shader,
 	light_shader:         shaders.Shader,
 
 	// test cube
@@ -28,7 +28,7 @@ Globals :: struct {
 g: Globals
 
 init_globals :: proc() {
-	g.cube_shader = shaders.load(.Cube)
+	g.entity_shader = shaders.load(.Entity)
 	g.light_shader = shaders.load(.Light)
 
 	g.cube_model = make_cube()
