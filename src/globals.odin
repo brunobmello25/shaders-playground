@@ -29,7 +29,7 @@ init_globals :: proc() {
 	g.entity_shader = shaders.load(.Entity)
 	g.light_shader = shaders.load(.Light)
 
-	g.cube_diffuse_texture = load_texture("res/container2.png")
+	g.cube_diffuse_texture = load_texture("res/container_diffuse.png")
 
 	g.light = Light {
 		position = {1.2, 1.0, 2.0},
