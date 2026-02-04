@@ -65,8 +65,14 @@ setup_cube :: proc(e: ^Entity) {
 		sg.apply_bindings(
 			{
 				vertex_buffers = {0 = e.model.vertices},
-				views = {shaders.VIEW_entity_diffuse_texture = g.cube_diffuse_texture.view},
-				samplers = {shaders.SMP_entity_diffuse_sampler = g.cube_diffuse_texture.sampler},
+				views = {
+					shaders.VIEW_entity_diffuse_texture = g.cube_diffuse_texture.view,
+					shaders.VIEW_entity_specular_texture = g.cube_specular_texture.view,
+				},
+				samplers = {
+					shaders.SMP_entity_diffuse_sampler = g.cube_diffuse_texture.sampler,
+					shaders.SMP_entity_specular_sampler = g.cube_specular_texture.sampler,
+				},
 				// index_buffer = quad.indices,
 			},
 		)
@@ -83,7 +89,6 @@ setup_cube :: proc(e: ^Entity) {
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
 		cube_fs_material := shaders.Entity_Fs_Material {
-			specular  = {0.5, 0.5, 0.5},
 			shininess = 32.0,
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Material, range(&cube_fs_material))

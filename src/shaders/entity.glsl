@@ -42,7 +42,6 @@ layout (binding=1) uniform Entity_FS_Params {
 };
 
 layout (binding=2) uniform Entity_FS_Material {
-	vec3 specular;
 	float shininess;
 } material;
 
@@ -57,10 +56,13 @@ layout (binding=3) uniform Entity_FS_Light {
 layout (binding=4) uniform texture2D entity_diffuse_texture;
 layout (binding=5) uniform sampler entity_diffuse_sampler;
 
+layout (binding=6) uniform texture2D entity_specular_texture;
+layout (binding=7) uniform sampler entity_specular_sampler;
+
 void main () {
 
 	// ambient
-	vec3 ambient = light.ambient;
+	vec3 ambient = light.ambient * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
 
 	// diffuse
 	vec3 norm = normalize(normal);
@@ -72,7 +74,7 @@ void main () {
 	vec3 viewDir = normalize(viewPos - fragWorldPos);
 	vec3 reflectDir = reflect(-lightDir, norm);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-	vec3 specular = light.specular * (spec * material.specular);
+	vec3 specular = light.specular * spec * vec3(texture(sampler2D(entity_specular_texture, entity_specular_sampler), uv));
 
 	vec3 result = ambient + diffuse + specular;
 
