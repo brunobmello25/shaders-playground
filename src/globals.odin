@@ -20,6 +20,9 @@ Globals :: struct {
 
 	// input
 	input:                Input,
+
+	// entities
+	entities:             []^Entity,
 }
 
 g: Globals
