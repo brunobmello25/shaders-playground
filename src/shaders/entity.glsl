@@ -13,7 +13,7 @@ out vec3 normal;
 out vec3 fragWorldPos;
 out vec2 uv;
 
-layout (binding=0) uniform CubeVSParams {
+layout (binding=0) uniform Entity_VS_Params {
 	mat4 model;
 	mat4 view;
 	mat4 projection;
@@ -37,16 +37,16 @@ in vec2 uv;
 
 out vec4 fragColor;
 
-layout (binding=1) uniform CubeFSParams {
+layout (binding=1) uniform Entity_FS_Params {
 	vec3 viewPos;
 };
 
-layout (binding=2) uniform CubeFSMaterial {
+layout (binding=2) uniform Entity_FS_Material {
 	vec3 specular;
 	float shininess;
 } material;
 
-layout (binding=3) uniform CubeFSLight {
+layout (binding=3) uniform Entity_FS_Light {
 	vec3 position;
 
 	vec3 ambient;
@@ -54,8 +54,8 @@ layout (binding=3) uniform CubeFSLight {
 	vec3 specular;
 } light;
 
-layout (binding=4) uniform texture2D cubeDiffuseTexture;
-layout (binding=5) uniform sampler cubeDiffuseSampler;
+layout (binding=4) uniform texture2D entity_diffuse_texture;
+layout (binding=5) uniform sampler entity_diffuse_sampler;
 
 void main () {
 
@@ -66,7 +66,7 @@ void main () {
 	vec3 norm = normalize(normal);
 	vec3 lightDir = normalize(light.position - fragWorldPos);
 	float diff = max(dot(norm, lightDir), 0.0);
-	vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(cubeDiffuseTexture, cubeDiffuseSampler), uv));
+	vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
 
 	// specular
 	vec3 viewDir = normalize(viewPos - fragWorldPos);
@@ -81,4 +81,4 @@ void main () {
 
 @end
 
-@program cube vs fs
+@program entity vs fs

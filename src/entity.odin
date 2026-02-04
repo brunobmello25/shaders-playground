@@ -15,11 +15,12 @@ EntityHandle :: struct {
 }
 
 Entity :: struct {
-	kind:   EntityKind,
-	model:  Model,
-	scale:  Vec3,
-	update: proc(e: ^Entity),
-	render: proc(e: ^Entity),
+	kind:     EntityKind,
+	model:    Model,
+	scale:    Vec3,
+	position: Vec3,
+	update:   proc(e: ^Entity),
+	render:   proc(e: ^Entity),
 }
 
 EntityGlobals :: struct {

@@ -9,7 +9,7 @@ Shader :: struct {
 }
 
 ShaderKind :: enum {
-	Cube,
+	Entity,
 	Light,
 }
 
@@ -18,13 +18,13 @@ load :: proc(kind: ShaderKind) -> Shader {
 	layout: sg.Vertex_Layout_State
 
 	switch kind {
-	case .Cube:
-		desc = cube_shader_desc(sg.query_backend())
+	case .Entity:
+		desc = entity_shader_desc(sg.query_backend())
 		layout = {
 			attrs = {
-				ATTR_cube_aPos = {format = .FLOAT3},
-				ATTR_cube_aNormal = {format = .FLOAT3},
-				ATTR_cube_aUv = {format = .FLOAT2},
+				ATTR_entity_aPos = {format = .FLOAT3},
+				ATTR_entity_aNormal = {format = .FLOAT3},
+				ATTR_entity_aUv = {format = .FLOAT2},
 			},
 		}
 	case .Light:
