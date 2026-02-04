@@ -57,7 +57,7 @@ setup_cube :: proc(e: ^Entity) {
 
 	e.draw = proc(e: ^Entity, camera: Camera) {
 		// TODO: generalize this for other entities
-		model_matrix := linalg.matrix4_translate_f32(g.cube_pos)
+		model_matrix := linalg.matrix4_translate_f32(e.position)
 		normal_matrix := linalg.transpose(linalg.inverse(model_matrix))
 
 		view, proj := view_and_projection(camera)
@@ -65,7 +65,7 @@ setup_cube :: proc(e: ^Entity) {
 		sg.apply_pipeline(g.entity_shader.pipeline)
 		sg.apply_bindings(
 			{
-				vertex_buffers = {0 = g.cube_model.vertices},
+				vertex_buffers = {0 = e.model.vertices},
 				views = {shaders.VIEW_entity_diffuse_texture = g.cube_diffuse_texture.view},
 				samplers = {shaders.SMP_entity_diffuse_sampler = g.cube_diffuse_texture.sampler},
 				// index_buffer = quad.indices,
@@ -96,6 +96,6 @@ setup_cube :: proc(e: ^Entity) {
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Light, range(&cube_fs_light))
 
-		sg.draw(0, g.cube_model.vertex_count, 1)
+		sg.draw(0, e.model.vertex_count, 1)
 	}
 }

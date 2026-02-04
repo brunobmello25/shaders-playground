@@ -8,8 +8,6 @@ Globals :: struct {
 	light_shader:         shaders.Shader,
 
 	// test cube
-	cube_model:           Model,
-	cube_pos:             Vec3,
 	cube_diffuse_texture: Texture,
 
 	// light
@@ -31,8 +29,6 @@ init_globals :: proc() {
 	g.entity_shader = shaders.load(.Entity)
 	g.light_shader = shaders.load(.Light)
 
-	g.cube_model = make_cube()
-	g.cube_pos = Vec3{0.0, 0.0, 0.0}
 	g.cube_diffuse_texture = load_texture("res/container2.png")
 
 	g.light = Light {
