@@ -22,7 +22,7 @@ Globals :: struct {
 	input:                Input,
 
 	// entities
-	entities:             []^Entity,
+	using entity_globals: EntityGlobals,
 }
 
 g: Globals
