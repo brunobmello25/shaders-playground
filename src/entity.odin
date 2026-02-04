@@ -10,7 +10,6 @@ MAX_ENTITIES :: 100
 
 EntityKind :: enum {
 	nil,
-	Light,
 	Cube,
 }
 
