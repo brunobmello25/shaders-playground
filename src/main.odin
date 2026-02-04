@@ -44,6 +44,9 @@ init :: proc "c" () {
 	)
 
 	init_globals()
+
+	cube := entity_create()
+	setup_cube(cube)
 }
 
 cleanup :: proc "c" () {
@@ -65,7 +68,16 @@ frame :: proc "c" () {
 
 	update_camera(&g.camera, &g.input)
 	update_light_color_over_time(&g.light)
-	draw_cube(g.camera)
+
+	for &e in g.entities {
+		if e.kind == .nil {
+			continue
+		}
+
+		e.update(&e)
+		e.draw(&e, g.camera)
+	}
+
 	draw_light(g.camera)
 
 	sg.end_pass()
