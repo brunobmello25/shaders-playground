@@ -17,15 +17,15 @@ Light :: struct {
 }
 
 update_light_color_over_time :: proc(light: ^Light) {
-	time := stime.sec(stime.now())
-	light_color: Vec3
-
-	light_color.x = f32(math.sin(time * 2))
-	light_color.y = f32(math.sin(time * 0.7))
-	light_color.z = f32(math.sin(time * 1.3))
-
-	light.diffuse = light_color * Vec3{0.5, 0.5, 0.5}
-	light.ambient = light.diffuse * Vec3{0.2, 0.2, 0.2}
+	// time := stime.sec(stime.now())
+	// light_color: Vec3
+	//
+	// light_color.x = f32(math.sin(time * 2))
+	// light_color.y = f32(math.sin(time * 0.7))
+	// light_color.z = f32(math.sin(time * 1.3))
+	//
+	// light.diffuse = light_color * Vec3{0.5, 0.5, 0.5}
+	// light.ambient = light.diffuse * Vec3{0.2, 0.2, 0.2}
 }
 
 draw_light :: proc(camera: Camera) {

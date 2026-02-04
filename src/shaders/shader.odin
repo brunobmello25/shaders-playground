@@ -21,12 +21,16 @@ load :: proc(kind: ShaderKind) -> Shader {
 	case .Cube:
 		desc = cube_shader_desc(sg.query_backend())
 		layout = {
-			attrs = {ATTR_cube_aPos = {format = .FLOAT3}, ATTR_cube_aNormal = {format = .FLOAT3}},
+			attrs = {
+				ATTR_cube_aPos = {format = .FLOAT3},
+				ATTR_cube_aNormal = {format = .FLOAT3},
+				ATTR_cube_aUv = {format = .FLOAT2},
+			},
 		}
 	case .Light:
 		desc = light_shader_desc(sg.query_backend())
 		layout = {
-			buffers = {0 = {stride = size_of(f32) * 3 * 2}},
+			buffers = {0 = {stride = size_of(f32) * (3 + 3 + 2)}},
 			attrs = {ATTR_light_aPos = {format = .FLOAT3}},
 		}
 	}

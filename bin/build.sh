@@ -25,7 +25,7 @@ fi
 
 if [ "$BUILD_GAME" = "true" ]; then
 	pushd ./target
-	odin build ../src -out=./game -debug -vet -error-pos-style:unix
+	odin build ../src -out=./game -debug -error-pos-style:unix
 	popd
 fi
 

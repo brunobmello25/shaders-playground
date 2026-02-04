@@ -46,6 +46,14 @@ update_camera :: proc(camera: ^Camera, input: ^Input) {
 		camera.pos += camera_speed * linalg.normalize0(linalg.cross(camera.front, camera.up))
 	}
 
+	if is_action_down(input^, .SPACE) {
+		camera.pos += camera_speed * camera.up
+	}
+
+	if is_action_down(input^, .LEFT_SHIFT) {
+		camera.pos -= camera_speed * camera.up
+	}
+
 	if input.is_mouse_locked {
 		x_offset := input.mouse_delta.x * mouse_sensitivity
 		y_offset := input.mouse_delta.y * mouse_sensitivity

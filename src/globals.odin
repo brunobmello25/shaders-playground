@@ -4,21 +4,22 @@ import "./shaders"
 
 Globals :: struct {
 	//shaders
-	cube_shader:  shaders.Shader,
-	light_shader: shaders.Shader,
+	cube_shader:          shaders.Shader,
+	light_shader:         shaders.Shader,
 
 	// test cube
-	cube_model:   Model,
-	cube_pos:     Vec3,
+	cube_model:           Model,
+	cube_pos:             Vec3,
+	cube_diffuse_texture: Texture,
 
 	// light
-	light:        Light,
+	light:                Light,
 
 	//camera
-	camera:       Camera,
+	camera:               Camera,
 
 	// input
-	input:        Input,
+	input:                Input,
 }
 
 g: Globals
@@ -29,6 +30,7 @@ init_globals :: proc() {
 
 	g.cube_model = make_cube()
 	g.cube_pos = Vec3{0.0, 0.0, 0.0}
+	g.cube_diffuse_texture = load_texture("res/container2.png")
 
 	g.light = Light {
 		position = {1.2, 1.0, 2.0},

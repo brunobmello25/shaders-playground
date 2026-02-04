@@ -7,9 +7,11 @@
 
 in vec3 aPos;
 in vec3 aNormal;
+in vec2 aUv;
 
 out vec3 normal;
 out vec3 fragWorldPos;
+out vec2 uv;
 
 layout (binding=0) uniform CubeVSParams {
 	mat4 model;
@@ -22,6 +24,7 @@ void main () {
 	gl_Position = projection * view * model * vec4(aPos, 1.0);
 	fragWorldPos = vec3(model * vec4(aPos, 1.0));
 	normal = mat3(normalMatrix) * aNormal;
+	uv = aUv;
 }
 
 @end
@@ -30,6 +33,7 @@ void main () {
 
 in vec3 normal;
 in vec3 fragWorldPos;
+in vec2 uv;
 
 out vec4 fragColor;
 
@@ -38,8 +42,6 @@ layout (binding=1) uniform CubeFSParams {
 };
 
 layout (binding=2) uniform CubeFSMaterial {
-	vec3 ambient;
-	vec3 diffuse;
 	vec3 specular;
 	float shininess;
 } material;
@@ -52,16 +54,19 @@ layout (binding=3) uniform CubeFSLight {
 	vec3 specular;
 } light;
 
+layout (binding=4) uniform texture2D cubeDiffuseTexture;
+layout (binding=5) uniform sampler cubeDiffuseSampler;
+
 void main () {
 
 	// ambient
-	vec3 ambient = light.ambient * material.ambient;
+	vec3 ambient = light.ambient;
 
 	// diffuse
 	vec3 norm = normalize(normal);
 	vec3 lightDir = normalize(light.position - fragWorldPos);
 	float diff = max(dot(norm, lightDir), 0.0);
-	vec3 diffuse = light.diffuse * (diff * material.diffuse);
+	vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(cubeDiffuseTexture, cubeDiffuseSampler), uv));
 
 	// specular
 	vec3 viewDir = normalize(viewPos - fragWorldPos);
