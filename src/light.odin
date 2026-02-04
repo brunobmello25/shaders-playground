@@ -1,10 +1,8 @@
 package main
 
-import "core:math"
 import "core:math/linalg"
 
 import sg "../sokol/gfx"
-import stime "../sokol/time"
 
 import shaders "shaders"
 
@@ -26,6 +24,16 @@ update_light_color_over_time :: proc(light: ^Light) {
 	//
 	// light.diffuse = light_color * Vec3{0.5, 0.5, 0.5}
 	// light.ambient = light.diffuse * Vec3{0.2, 0.2, 0.2}
+}
+
+make_global_light :: proc() -> Light {
+	return Light {
+		position = {1.2, 1.0, 2.0},
+		ambient = {0.2, 0.2, 0.2},
+		diffuse = {0.5, 0.5, 0.5},
+		specular = {1.0, 1.0, 1.0},
+		model = make_cube(),
+	}
 }
 
 draw_light :: proc(camera: Camera) {
