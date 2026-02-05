@@ -10,7 +10,7 @@ MAX_ENTITIES :: 100
 
 EntityKind :: enum {
 	nil,
-	Cube,
+	Container,
 }
 
 EntityHandle :: struct {
@@ -51,8 +51,8 @@ entity_create :: proc() -> ^Entity {
 	return &g.entity_globals.entities[index]
 }
 
-setup_cube :: proc(e: ^Entity) {
-	e.kind = .Cube
+setup_container :: proc(e: ^Entity) {
+	e.kind = .Container
 
 	e.model = make_cube()
 	e.scale = Vec3{1.0, 1.0, 1.0}
@@ -98,13 +98,13 @@ setup_cube :: proc(e: ^Entity) {
 			shininess = 32.0,
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
-		cube_fs_light := shaders.Entity_Fs_Light {
+		fs_light := shaders.Fs_Light {
 			position = g.light.position,
 			ambient  = g.light.ambient,
 			diffuse  = g.light.diffuse,
 			specular = g.light.specular,
 		}
-		sg.apply_uniforms(shaders.UB_Entity_FS_Light, range(&cube_fs_light))
+		sg.apply_uniforms(shaders.UB_FS_Light, range(&fs_light))
 
 		sg.draw(0, e.model.vertex_count, 1)
 	}

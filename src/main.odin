@@ -45,8 +45,8 @@ init :: proc "c" () {
 
 	init_globals()
 
-	cube := entity_create()
-	setup_cube(cube)
+	container := entity_create()
+	setup_container(container)
 }
 
 cleanup :: proc "c" () {

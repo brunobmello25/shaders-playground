@@ -1,4 +1,5 @@
-@header package shaders;
+@include shared.glsl
+
 @header import sg "../../sokol/gfx";
 
 @ctype mat4 Mat4
@@ -42,19 +43,13 @@ layout (binding=1) uniform Entity_FS_Params {
 	float shininess;
 };
 
-layout (binding=2) uniform Entity_FS_Light {
-	vec3 position;
-
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
-} light;
-
 layout (binding=3) uniform texture2D entity_diffuse_texture;
 layout (binding=4) uniform sampler entity_diffuse_sampler;
 
 layout (binding=5) uniform texture2D entity_specular_texture;
 layout (binding=6) uniform sampler entity_specular_sampler;
+
+@include_block LightUniform
 
 void main () {
 
