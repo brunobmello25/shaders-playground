@@ -99,10 +99,10 @@ setup_cube_light_source :: proc(e: ^Entity) {
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
 		fs_light := shaders.Fs_Light {
-			position = g.light.position,
-			ambient  = g.light.ambient,
-			diffuse  = g.light.diffuse,
-			specular = g.light.specular,
+			direction = g.light.direction,
+			ambient   = g.light.ambient,
+			diffuse   = g.light.diffuse,
+			specular  = g.light.specular,
 		}
 		sg.apply_uniforms(shaders.UB_FS_Light, range(&fs_light))
 
@@ -158,10 +158,10 @@ setup_container :: proc(e: ^Entity) {
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
 		fs_light := shaders.Fs_Light {
-			position = g.light.position,
-			ambient  = g.light.ambient,
-			diffuse  = g.light.diffuse,
-			specular = g.light.specular,
+			direction = g.light.direction,
+			ambient   = g.light.ambient,
+			diffuse   = g.light.diffuse,
+			specular  = g.light.specular,
 		}
 		sg.apply_uniforms(shaders.UB_FS_Light, range(&fs_light))
 

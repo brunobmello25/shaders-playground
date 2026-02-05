@@ -58,13 +58,13 @@ void main () {
 
 	// diffuse
 	vec3 norm = normalize(normal);
-	vec3 lightDir = normalize(light.position - fragWorldPos);
-	float diff = max(dot(norm, lightDir), 0.0);
+	vec3 light_dir = normalize(-light.direction);
+	float diff = max(dot(norm, light_dir), 0.0);
 	vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
 
 	// specular
 	vec3 viewDir = normalize(viewPos - fragWorldPos);
-	vec3 reflectDir = reflect(-lightDir, norm);
+	vec3 reflectDir = reflect(-light_dir, norm);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
 	vec3 specular = light.specular * spec * vec3(texture(sampler2D(entity_specular_texture, entity_specular_sampler), uv));
 
