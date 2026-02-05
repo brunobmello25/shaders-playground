@@ -58,6 +58,41 @@ load_texture :: proc(path: cstring) -> Texture {
 	return Texture{image = image, sampler = sampler, view = view}
 }
 
+make_white_texture :: proc() -> Texture {
+	white_pixel := [4]u8{255, 255, 255, 255}
+
+	image := sg.make_image(
+		{
+			width = 1,
+			height = 1,
+			pixel_format = .RGBA8,
+			data = {mip_levels = {0 = sg.Range{ptr = &white_pixel, size = size_of(white_pixel)}}},
+		},
+	)
+
+	sampler := sg.make_sampler(
+		{
+			mag_filter = .LINEAR,
+			min_filter = .NEAREST,
+			wrap_v = .CLAMP_TO_EDGE,
+			wrap_u = .CLAMP_TO_EDGE,
+		},
+	)
+
+	view := sg.make_view(
+		{
+			texture = {
+				image = image,
+				slices = {base = 0, count = 1},
+				mip_levels = {base = 0, count = 1},
+			},
+		},
+	)
+
+	return Texture{image = image, sampler = sampler, view = view}
+}
+
+
 make_cube :: proc() -> Model {
 	// odinfmt: disable
 	vertices_data := [dynamic]f32{

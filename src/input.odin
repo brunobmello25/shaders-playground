@@ -23,20 +23,8 @@ toggle_mouse_lock :: proc(input: ^Input) {
 	}
 }
 
-was_action_just_pressed :: proc(input: Input, action: sapp.Keycode) -> bool {
-	return input.input_map[action].is_down && !input.input_map[action].was_down
-}
-
-was_action_just_released :: proc(input: Input, action: sapp.Keycode) -> bool {
-	return !input.input_map[action].is_down && input.input_map[action].was_down
-}
-
 was_mouse_button_just_pressed :: proc(input: Input, button: sapp.Mousebutton) -> bool {
 	return input.mouse_input_map[button].is_down && !input.mouse_input_map[button].was_down
-}
-
-was_mouse_button_just_released :: proc(input: Input, button: sapp.Mousebutton) -> bool {
-	return !input.mouse_input_map[button].is_down && input.mouse_input_map[button].was_down
 }
 
 is_action_down :: proc(input: Input, action: sapp.Keycode) -> bool {

@@ -24,7 +24,6 @@ g: Globals
 
 init_globals :: proc() {
 	g.entity_shader = shaders.load(.Entity)
-	g.light_shader = shaders.load(.Light)
 
 	g.light = make_global_light()
 

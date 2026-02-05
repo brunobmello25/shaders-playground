@@ -47,6 +47,9 @@ init :: proc "c" () {
 
 	container := entity_create()
 	setup_container(container)
+
+	light_source := entity_create()
+	setup_cube_light_source(light_source)
 }
 
 cleanup :: proc "c" () {
@@ -67,7 +70,6 @@ frame :: proc "c" () {
 	)
 
 	update_camera(&g.camera, &g.input)
-	update_light_color_over_time(&g.light)
 
 	for &e in g.entities {
 		if e.kind == .nil {
@@ -77,8 +79,6 @@ frame :: proc "c" () {
 		e.update(&e)
 		e.draw(&e, g.camera)
 	}
-
-	draw_light(g.camera)
 
 	sg.end_pass()
 

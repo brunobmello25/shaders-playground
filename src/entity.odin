@@ -11,6 +11,7 @@ MAX_ENTITIES :: 100
 EntityKind :: enum {
 	nil,
 	Container,
+	CubeLightSource,
 }
 
 EntityHandle :: struct {
@@ -49,6 +50,64 @@ entity_create :: proc() -> ^Entity {
 	g.entity_globals.next_available_index += 1
 
 	return &g.entity_globals.entities[index]
+}
+
+setup_cube_light_source :: proc(e: ^Entity) {
+	e.kind = .CubeLightSource
+	e.model = make_cube()
+	e.scale = Vec3{0.2, 0.2, 0.2}
+	e.position = Vec3{1.2, 1.0, 2.0}
+	e.diffuse_texture = make_white_texture()
+	e.specular_texture = make_white_texture()
+
+	e.update = proc(e: ^Entity) {
+	}
+
+	e.draw = proc(e: ^Entity, camera: Camera) {
+		model_matrix :=
+			linalg.matrix4_translate_f32(e.position) * linalg.matrix4_scale_f32(e.scale)
+		normal_matrix := linalg.transpose(linalg.inverse(model_matrix))
+
+		view, proj := view_and_projection(camera)
+
+		sg.apply_pipeline(g.entity_shader.pipeline)
+		sg.apply_bindings(
+			{
+				vertex_buffers = {0 = e.model.vertices},
+				views = {
+					shaders.VIEW_entity_diffuse_texture = e.diffuse_texture.view,
+					shaders.VIEW_entity_specular_texture = e.specular_texture.view,
+				},
+				samplers = {
+					shaders.SMP_entity_diffuse_sampler = e.specular_texture.sampler,
+					shaders.SMP_entity_specular_sampler = e.specular_texture.sampler,
+				},
+				// index_buffer = quad.indices,
+			},
+		)
+		vs_params := shaders.Entity_Vs_Params {
+			model        = model_matrix,
+			view         = view,
+			projection   = proj,
+			normalMatrix = normal_matrix,
+		}
+		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
+
+		fs_params := shaders.Entity_Fs_Params {
+			viewPos   = camera.pos,
+			shininess = 32.0, // TODO: hardcoded
+		}
+		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
+		fs_light := shaders.Fs_Light {
+			position = g.light.position,
+			ambient  = g.light.ambient,
+			diffuse  = g.light.diffuse,
+			specular = g.light.specular,
+		}
+		sg.apply_uniforms(shaders.UB_FS_Light, range(&fs_light))
+
+		sg.draw(0, e.model.vertex_count, 1)
+	}
 }
 
 setup_container :: proc(e: ^Entity) {
@@ -95,7 +154,7 @@ setup_container :: proc(e: ^Entity) {
 
 		fs_params := shaders.Entity_Fs_Params {
 			viewPos   = camera.pos,
-			shininess = 32.0,
+			shininess = 32.0, // TODO: hardcoded
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
 		fs_light := shaders.Fs_Light {
