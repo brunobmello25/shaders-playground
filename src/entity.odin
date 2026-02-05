@@ -40,6 +40,7 @@ EntityGlobals :: struct {
 }
 
 entity_create :: proc() -> ^Entity {
+	// TODO: add proper asserts here
 	if g.entity_globals.next_available_index >= MAX_ENTITIES {
 		panic("Max entities reached")
 	}
