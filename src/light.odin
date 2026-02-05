@@ -1,11 +1,5 @@
 package main
 
-import "core:math/linalg"
-
-import sg "../sokol/gfx"
-
-import shaders "shaders"
-
 Light :: struct {
 	position: Vec3,
 	ambient:  Vec3,
