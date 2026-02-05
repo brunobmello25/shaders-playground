@@ -21,8 +21,16 @@ Texture :: struct {
 	view:    sg.View,
 }
 
-// TODO: make this reuse textures if the same path was already loaded
+TextureGlobals :: struct {
+	loaded_textures: map[cstring]Texture,
+}
+
 load_texture :: proc(path: cstring) -> Texture {
+	texture, ok := g.loaded_textures[path]
+	if ok {
+		return texture
+	}
+
 	width, height, channels: c.int
 
 	stbi.set_flip_vertically_on_load(1)
@@ -55,7 +63,13 @@ load_texture :: proc(path: cstring) -> Texture {
 		},
 	)
 
-	return Texture{image = image, sampler = sampler, view = view}
+	texture = Texture {
+		image   = image,
+		sampler = sampler,
+		view    = view,
+	}
+	g.loaded_textures[path] = texture
+	return texture
 }
 
 make_white_texture :: proc() -> Texture {
