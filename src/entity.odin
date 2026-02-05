@@ -93,13 +93,10 @@ setup_cube :: proc(e: ^Entity) {
 		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
 
 		fs_params := shaders.Entity_Fs_Params {
-			viewPos = camera.pos,
-		}
-		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
-		cube_fs_material := shaders.Entity_Fs_Material {
+			viewPos   = camera.pos,
 			shininess = 32.0,
 		}
-		sg.apply_uniforms(shaders.UB_Entity_FS_Material, range(&cube_fs_material))
+		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
 		cube_fs_light := shaders.Entity_Fs_Light {
 			position = g.light.position,
 			ambient  = g.light.ambient,

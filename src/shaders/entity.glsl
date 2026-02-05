@@ -39,13 +39,10 @@ out vec4 fragColor;
 
 layout (binding=1) uniform Entity_FS_Params {
 	vec3 viewPos;
+	float shininess;
 };
 
-layout (binding=2) uniform Entity_FS_Material {
-	float shininess;
-} material;
-
-layout (binding=3) uniform Entity_FS_Light {
+layout (binding=2) uniform Entity_FS_Light {
 	vec3 position;
 
 	vec3 ambient;
@@ -53,11 +50,11 @@ layout (binding=3) uniform Entity_FS_Light {
 	vec3 specular;
 } light;
 
-layout (binding=4) uniform texture2D entity_diffuse_texture;
-layout (binding=5) uniform sampler entity_diffuse_sampler;
+layout (binding=3) uniform texture2D entity_diffuse_texture;
+layout (binding=4) uniform sampler entity_diffuse_sampler;
 
-layout (binding=6) uniform texture2D entity_specular_texture;
-layout (binding=7) uniform sampler entity_specular_sampler;
+layout (binding=5) uniform texture2D entity_specular_texture;
+layout (binding=6) uniform sampler entity_specular_sampler;
 
 void main () {
 
@@ -73,7 +70,7 @@ void main () {
 	// specular
 	vec3 viewDir = normalize(viewPos - fragWorldPos);
 	vec3 reflectDir = reflect(-lightDir, norm);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
 	vec3 specular = light.specular * spec * vec3(texture(sampler2D(entity_specular_texture, entity_specular_sampler), uv));
 
 	vec3 result = ambient + diffuse + specular;
