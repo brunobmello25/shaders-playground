@@ -20,12 +20,18 @@ EntityHandle :: struct {
 }
 
 Entity :: struct {
-	kind:     EntityKind,
-	model:    Model,
-	scale:    Vec3,
-	position: Vec3,
-	update:   proc(e: ^Entity),
-	draw:     proc(e: ^Entity, camera: Camera),
+	kind:             EntityKind,
+
+	// drawing
+	model:            Model,
+	scale:            Vec3,
+	position:         Vec3,
+	diffuse_texture:  Texture,
+	specular_texture: Texture,
+
+	// procedures
+	update:           proc(e: ^Entity),
+	draw:             proc(e: ^Entity, camera: Camera),
 }
 
 EntityGlobals :: struct {
@@ -50,6 +56,8 @@ setup_cube :: proc(e: ^Entity) {
 	e.model = make_cube()
 	e.scale = Vec3{1.0, 1.0, 1.0}
 	e.position = Vec3{0.0, 0.0, 0.0}
+	e.diffuse_texture = load_texture("res/container_diffuse.png")
+	e.specular_texture = load_texture("res/container_specular.png")
 
 	e.update = proc(e: ^Entity) {
 	}
@@ -66,12 +74,12 @@ setup_cube :: proc(e: ^Entity) {
 			{
 				vertex_buffers = {0 = e.model.vertices},
 				views = {
-					shaders.VIEW_entity_diffuse_texture = g.cube_diffuse_texture.view,
-					shaders.VIEW_entity_specular_texture = g.cube_specular_texture.view,
+					shaders.VIEW_entity_diffuse_texture = e.diffuse_texture.view,
+					shaders.VIEW_entity_specular_texture = e.specular_texture.view,
 				},
 				samplers = {
-					shaders.SMP_entity_diffuse_sampler = g.cube_diffuse_texture.sampler,
-					shaders.SMP_entity_specular_sampler = g.cube_specular_texture.sampler,
+					shaders.SMP_entity_diffuse_sampler = e.specular_texture.sampler,
+					shaders.SMP_entity_specular_sampler = e.specular_texture.sampler,
 				},
 				// index_buffer = quad.indices,
 			},

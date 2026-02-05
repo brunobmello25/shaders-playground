@@ -21,6 +21,7 @@ Texture :: struct {
 	view:    sg.View,
 }
 
+// TODO: make this reuse textures if the same path was already loaded
 load_texture :: proc(path: cstring) -> Texture {
 	width, height, channels: c.int
 
