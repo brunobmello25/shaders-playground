@@ -48,7 +48,7 @@ layout (binding=1) uniform texture2D entity_specular_texture;
 layout (binding=0) uniform sampler entity_diffuse_sampler;
 layout (binding=1) uniform sampler entity_specular_sampler;
 
-#define MAX_LIGHTS 8 // TODO: pull this number from CPU side somehow
+#define MAX_LIGHTS 8
 
 layout (std140, binding=2) uniform FS_Lights {
 	int light_count; // .x = light_count
