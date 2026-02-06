@@ -95,10 +95,10 @@ setup_cube_light_source :: proc(e: ^Entity) {
 			},
 		)
 		vs_params := shaders.Entity_Vs_Params {
-			model        = model_matrix,
-			view         = view,
-			projection   = proj,
-			normalMatrix = normal_matrix,
+			model         = model_matrix,
+			view          = view,
+			projection    = proj,
+			normal_matrix = normal_matrix,
 		}
 		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
 
@@ -149,10 +149,10 @@ setup_container :: proc(e: ^Entity) {
 			},
 		)
 		vs_params := shaders.Entity_Vs_Params {
-			model        = model_matrix,
-			view         = view,
-			projection   = proj,
-			normalMatrix = normal_matrix,
+			model         = model_matrix,
+			view          = view,
+			projection    = proj,
+			normal_matrix = normal_matrix,
 		}
 		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
 

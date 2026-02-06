@@ -5,9 +5,9 @@
 
 @vs vs
 
-in vec3 aPos;
-in vec3 aNormal;
-in vec2 aUv;
+in vec3 a_pos;
+in vec3 a_normal;
+in vec2 a_uv;
 
 out vec3 normal;
 out vec3 fragWorldPos;
@@ -17,14 +17,14 @@ layout (binding=0) uniform Entity_VS_Params {
 	mat4 model;
 	mat4 view;
 	mat4 projection;
-	mat4 normalMatrix;
+	mat4 normal_matrix;
 };
 
 void main () {
-	gl_Position = projection * view * model * vec4(aPos, 1.0);
-	fragWorldPos = vec3(model * vec4(aPos, 1.0));
-	normal = mat3(normalMatrix) * aNormal;
-	uv = aUv;
+	gl_Position = projection * view * model * vec4(a_pos, 1.0);
+	fragWorldPos = vec3(model * vec4(a_pos, 1.0));
+	normal = mat3(normal_matrix) * a_normal;
+	uv = a_uv;
 }
 
 @end
