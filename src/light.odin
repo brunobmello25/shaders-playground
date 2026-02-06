@@ -5,6 +5,7 @@ import "./shaders"
 MAX_LIGHTS :: 8
 
 LightKind :: enum {
+	nil,
 	Directional,
 	Point,
 	Spot,
@@ -39,6 +40,10 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 
 	for i in 0 ..< g.light_globals.light_count {
 		light := g.light_globals.lights[i]
+		if light.kind == .nil {
+			continue
+		}
+
 		directions[i] = {light.direction.x, light.direction.y, light.direction.z, 0.0}
 		positions[i] = {light.position.x, light.position.y, light.position.z, 1.0} // TODO: could probably join directions and positions into a single array and distinguish with the w component
 		ambients[i] = {light.ambient.x, light.ambient.y, light.ambient.z, 1.0}
@@ -79,10 +84,10 @@ setup_world_lights :: proc() {
 	point_light := light_create()
 	setup_point_light(
 		point_light,
-		position = Vec3{2.0, 6.0, -15.0},
+		position = Vec3{1.0, 6.0, -15.0},
 		ambient = Vec3{0.2, 0.2, 0.2},
 		diffuse = Vec3{0.5, 0.5, 0.5},
-		specular = Vec3{1.0, 1.0, 1.0},
+		specular = Vec3{1.0, 1.0, 1.0}, // TODO: check if this light is right. i can't see the specular reflections
 		constant_attenuation = 1.0,
 		linear_attenuation = 0.09,
 		quadratic_attenuation = 0.032,
@@ -102,6 +107,10 @@ light_create :: proc() -> ^Light {
 	g.light_globals.light_count += 1
 
 	return &g.light_globals.lights[index]
+}
+
+light_destroy :: proc(l: ^Light) {
+	l.kind = .nil
 }
 
 setup_point_light :: proc(

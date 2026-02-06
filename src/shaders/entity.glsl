@@ -49,9 +49,9 @@ layout (binding=0) uniform sampler entity_diffuse_sampler;
 layout (binding=1) uniform sampler entity_specular_sampler;
 
 #define MAX_LIGHTS 8
-#define LIGHT_DIRECTIONAL 0
-#define LIGHT_POINT 1
-#define LIGHT_SPOT 2
+#define LIGHT_DIRECTIONAL 1
+#define LIGHT_POINT 2
+#define LIGHT_SPOT 3
 
 layout (std140, binding=2) uniform FS_Lights {
 	int light_count;
