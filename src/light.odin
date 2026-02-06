@@ -11,12 +11,16 @@ LightKind :: enum {
 	Spot,
 }
 
+// TODO: make this unmutable somehow?
+zero_light: Light = {}
+
 LightHandle :: struct {
 	id:    int,
 	index: int,
 }
 
 Light :: struct {
+	handle:                LightHandle,
 	kind:                  LightKind,
 	direction:             Vec3,
 	position:              Vec3,
@@ -32,6 +36,41 @@ LightGlobals :: struct {
 	lights:               [MAX_LIGHTS]Light,
 	light_count:          int,
 	next_available_index: int,
+}
+
+light_to_handle :: proc(l: ^Light) -> LightHandle {
+	return l.handle
+}
+
+handle_to_light :: proc(lh: LightHandle) -> ^Light {
+	assert(lh.index >= 0 && lh.index < MAX_LIGHTS, "Invalid light handle index")
+
+	l := &g.light_globals.lights[lh.index]
+
+
+	if l.handle.id != lh.id {
+		return &zero_light
+	}
+
+	return l
+}
+
+// TODO: add proper asserts here
+light_create :: proc() -> ^Light {
+	// TODO: also should create a free list
+	if g.light_globals.next_available_index >= MAX_LIGHTS {
+		panic("Max lights reached")
+	}
+
+	index := g.light_globals.next_available_index
+	g.light_globals.next_available_index += 1
+	g.light_globals.light_count += 1
+
+	return &g.light_globals.lights[index]
+}
+
+light_destroy :: proc(l: ^Light) {
+	l.kind = .nil
 }
 
 lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
@@ -76,7 +115,6 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 }
 
 setup_world_lights :: proc() {
-
 	dir_light := light_create()
 	setup_directional_light(
 		dir_light,
@@ -99,26 +137,7 @@ setup_world_lights :: proc() {
 	)
 
 	light_source := entity_create()
-	setup_light_source(light_source, point_light.position)
-	// TODO: add a light source here at the position of this point light
-}
-
-// TODO: add proper asserts here
-light_create :: proc() -> ^Light {
-	// TODO: also should create a free list
-	if g.light_globals.next_available_index >= MAX_LIGHTS {
-		panic("Max lights reached")
-	}
-
-	index := g.light_globals.next_available_index
-	g.light_globals.next_available_index += 1
-	g.light_globals.light_count += 1
-
-	return &g.light_globals.lights[index]
-}
-
-light_destroy :: proc(l: ^Light) {
-	l.kind = .nil
+	setup_light_source(light_source, point_light.position, light_to_handle(point_light))
 }
 
 setup_point_light :: proc(

@@ -21,21 +21,22 @@ EntityHandle :: struct {
 }
 
 Entity :: struct {
-	kind:             EntityKind,
-	handle:           EntityHandle,
+	kind:                      EntityKind,
+	handle:                    EntityHandle,
 
 	// drawing
-	model:            Model,
-	scale:            Vec3,
-	position:         Vec3,
-	diffuse_texture:  Texture,
-	specular_texture: Texture,
+	model:                     Model,
+	scale:                     Vec3,
+	position:                  Vec3,
+	diffuse_texture:           Texture,
+	specular_texture:          Texture,
 
 	// procedures
-	update:           proc(e: ^Entity),
-	draw:             proc(e: ^Entity, camera: Camera),
+	update:                    proc(e: ^Entity),
+	draw:                      proc(e: ^Entity, camera: Camera),
 
 	// light handle for light sources
+	light_source_light_handle: LightHandle,
 }
 
 EntityGlobals :: struct {
@@ -63,13 +64,14 @@ entity_create :: proc() -> ^Entity {
 	return entity
 }
 
-setup_light_source :: proc(e: ^Entity, pos: Vec3) {
+setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 	e.kind = .LightSource
 	e.model = make_cube()
 	e.scale = Vec3{0.2, 0.2, 0.2}
 	e.position = pos
 	e.diffuse_texture = make_white_texture()
 	e.specular_texture = make_white_texture()
+	e.light_source_light_handle = light_handle
 
 	e.update = proc(e: ^Entity) {
 	}
