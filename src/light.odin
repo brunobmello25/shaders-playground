@@ -5,19 +5,21 @@ import "./shaders"
 MAX_LIGHTS :: 8
 
 LightKind :: enum {
-	nil,
 	Directional,
 	Point,
 	Spot,
 }
 
 Light :: struct {
-	kind:      LightKind,
-	direction: Vec3,
-	position:  Vec3,
-	ambient:   Vec3,
-	diffuse:   Vec3,
-	specular:  Vec3,
+	kind:                  LightKind,
+	direction:             Vec3,
+	position:              Vec3,
+	ambient:               Vec3,
+	diffuse:               Vec3,
+	specular:              Vec3,
+	constant_attenuation:  f32,
+	linear_attenuation:    f32,
+	quadratic_attenuation: f32,
 }
 
 LightGlobals :: struct {
@@ -27,11 +29,13 @@ LightGlobals :: struct {
 }
 
 lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
+	kinds := [MAX_LIGHTS][4]i32{}
 	directions := [MAX_LIGHTS][4]f32{}
 	positions := [MAX_LIGHTS][4]f32{}
 	ambients := [MAX_LIGHTS][4]f32{}
 	diffuses := [MAX_LIGHTS][4]f32{}
 	speculars := [MAX_LIGHTS][4]f32{}
+	attenuations := [MAX_LIGHTS][4]f32{}
 
 	for i in 0 ..< g.light_globals.light_count {
 		light := g.light_globals.lights[i]
@@ -40,14 +44,24 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 		ambients[i] = {light.ambient.x, light.ambient.y, light.ambient.z, 1.0}
 		diffuses[i] = {light.diffuse.x, light.diffuse.y, light.diffuse.z, 1.0}
 		speculars[i] = {light.specular.x, light.specular.y, light.specular.z, 1.0}
+		kinds[i] = [4]i32{i32(light.kind), 0, 0, 0}
+		attenuations[i] = {
+			light.constant_attenuation,
+			light.linear_attenuation,
+			light.quadratic_attenuation,
+			1.0,
+		}
 	}
 
 	return shaders.Fs_Lights {
 		light_count = i32(g.light_globals.light_count),
+		kinds = kinds,
 		directions = directions,
+		positions = positions,
 		ambients = ambients,
 		diffuses = diffuses,
 		speculars = speculars,
+		attenuations = attenuations,
 	}
 }
 
@@ -65,11 +79,15 @@ setup_world_lights :: proc() {
 	point_light := light_create()
 	setup_point_light(
 		point_light,
-		position = Vec3{1.2, 1.0, 2.0},
+		position = Vec3{2.0, 6.0, -15.0},
 		ambient = Vec3{0.2, 0.2, 0.2},
 		diffuse = Vec3{0.5, 0.5, 0.5},
 		specular = Vec3{1.0, 1.0, 1.0},
+		constant_attenuation = 1.0,
+		linear_attenuation = 0.09,
+		quadratic_attenuation = 0.032,
 	)
+	// TODO: add a light source here at the position of this point light
 }
 
 // TODO: add proper asserts here
@@ -92,12 +110,18 @@ setup_point_light :: proc(
 	ambient: Vec3,
 	diffuse: Vec3,
 	specular: Vec3,
+	constant_attenuation: f32,
+	linear_attenuation: f32,
+	quadratic_attenuation: f32,
 ) {
 	l.kind = .Point
 	l.position = position
 	l.ambient = ambient
 	l.diffuse = diffuse
 	l.specular = specular
+	l.constant_attenuation = constant_attenuation
+	l.linear_attenuation = linear_attenuation
+	l.quadratic_attenuation = quadratic_attenuation
 }
 
 setup_directional_light :: proc(
