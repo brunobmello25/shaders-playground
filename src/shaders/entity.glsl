@@ -49,11 +49,15 @@ layout (binding=0) uniform sampler entity_diffuse_sampler;
 layout (binding=1) uniform sampler entity_specular_sampler;
 
 #define MAX_LIGHTS 8
+#define LIGHT_DIRECTIONAL 0
+#define LIGHT_POINT 1
+#define LIGHT_SPOT 2
 
 layout (std140, binding=2) uniform FS_Lights {
-	int light_count; // .x = light_count
+	int light_count;
 	ivec4 kinds[MAX_LIGHTS];
 	vec4 directions[MAX_LIGHTS];
+	vec4 positions[MAX_LIGHTS];
 	vec4 ambients[MAX_LIGHTS];
 	vec4 diffuses[MAX_LIGHTS];
 	vec4 speculars[MAX_LIGHTS];
@@ -62,6 +66,7 @@ layout (std140, binding=2) uniform FS_Lights {
 struct Light {
 	int kind;
 	vec3 direction;
+	vec3 position;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -71,6 +76,7 @@ Light get_light(int i) {
 	Light light;
 	light.kind = fs_lights.kinds[i].x;
 	light.direction = fs_lights.directions[i].xyz;
+	light.position = fs_lights.directions[i].xyz;
 	light.ambient = fs_lights.ambients[i].xyz;
 	light.diffuse = fs_lights.diffuses[i].xyz;
 	light.specular = fs_lights.speculars[i].xyz;
@@ -84,22 +90,25 @@ void main () {
 	for (int i = 0; i < light_count; i++) {
 		Light light = get_light(i);
 
-		// ambient
-		vec3 ambient = light.ambient * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
+		if(light.kind == LIGHT_DIRECTIONAL) {
+			// ambient
+			vec3 ambient = light.ambient * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
 
-		// diffuse
-		vec3 norm = normalize(normal);
-		vec3 light_dir = normalize(-light.direction);
-		float diff = max(dot(norm, light_dir), 0.0);
-		vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
+			// diffuse
+			vec3 norm = normalize(normal);
+			vec3 light_dir = normalize(-light.direction);
+			float diff = max(dot(norm, light_dir), 0.0);
+			vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
 
-		// specular
-		vec3 view_dir = normalize(view_pos - frag_world_pos);
-		vec3 reflect_dir = reflect(-light_dir, norm);
-		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), shininess);
-		vec3 specular = light.specular * spec * vec3(texture(sampler2D(entity_specular_texture, entity_specular_sampler), uv));
+			// specular
+			vec3 view_dir = normalize(view_pos - frag_world_pos);
+			vec3 reflect_dir = reflect(-light_dir, norm);
+			float spec = pow(max(dot(view_dir, reflect_dir), 0.0), shininess);
+			vec3 specular = light.specular * spec * vec3(texture(sampler2D(entity_specular_texture, entity_specular_sampler), uv));
 
-		result += ambient + diffuse + specular;
+			result += ambient + diffuse + specular;
+		} else if (light.kind == LIGHT_POINT) {
+		}
 	}
 
 	frag_color = vec4(result, 1.0);

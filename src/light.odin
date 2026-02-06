@@ -14,6 +14,7 @@ LightKind :: enum {
 Light :: struct {
 	kind:      LightKind,
 	direction: Vec3,
+	position:  Vec3,
 	ambient:   Vec3,
 	diffuse:   Vec3,
 	specular:  Vec3,
@@ -27,6 +28,7 @@ LightGlobals :: struct {
 
 lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 	directions := [MAX_LIGHTS][4]f32{}
+	positions := [MAX_LIGHTS][4]f32{}
 	ambients := [MAX_LIGHTS][4]f32{}
 	diffuses := [MAX_LIGHTS][4]f32{}
 	speculars := [MAX_LIGHTS][4]f32{}
@@ -34,6 +36,7 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 	for i in 0 ..< g.light_globals.light_count {
 		light := g.light_globals.lights[i]
 		directions[i] = {light.direction.x, light.direction.y, light.direction.z, 0.0}
+		positions[i] = {light.position.x, light.position.y, light.position.z, 1.0} // TODO: could probably join directions and positions into a single array and distinguish with the w component
 		ambients[i] = {light.ambient.x, light.ambient.y, light.ambient.z, 1.0}
 		diffuses[i] = {light.diffuse.x, light.diffuse.y, light.diffuse.z, 1.0}
 		speculars[i] = {light.specular.x, light.specular.y, light.specular.z, 1.0}
@@ -58,6 +61,15 @@ setup_world_lights :: proc() {
 		diffuse = Vec3{0.5, 0.5, 0.5},
 		specular = Vec3{1.0, 1.0, 1.0},
 	)
+
+	point_light := light_create()
+	setup_point_light(
+		point_light,
+		position = Vec3{1.2, 1.0, 2.0},
+		ambient = Vec3{0.2, 0.2, 0.2},
+		diffuse = Vec3{0.5, 0.5, 0.5},
+		specular = Vec3{1.0, 1.0, 1.0},
+	)
 }
 
 // TODO: add proper asserts here
@@ -72,6 +84,20 @@ light_create :: proc() -> ^Light {
 	g.light_globals.light_count += 1
 
 	return &g.light_globals.lights[index]
+}
+
+setup_point_light :: proc(
+	l: ^Light,
+	position: Vec3,
+	ambient: Vec3,
+	diffuse: Vec3,
+	specular: Vec3,
+) {
+	l.kind = .Point
+	l.position = position
+	l.ambient = ambient
+	l.diffuse = diffuse
+	l.specular = specular
 }
 
 setup_directional_light :: proc(
