@@ -11,7 +11,7 @@ MAX_ENTITIES :: 100
 EntityKind :: enum {
 	nil,
 	Container,
-	CubeLightSource,
+	LightSource,
 }
 
 EntityHandle :: struct {
@@ -34,6 +34,8 @@ Entity :: struct {
 	// procedures
 	update:           proc(e: ^Entity),
 	draw:             proc(e: ^Entity, camera: Camera),
+
+	// light handle for light sources
 }
 
 EntityGlobals :: struct {
@@ -61,11 +63,11 @@ entity_create :: proc() -> ^Entity {
 	return entity
 }
 
-setup_cube_light_source :: proc(e: ^Entity) {
-	e.kind = .CubeLightSource
+setup_light_source :: proc(e: ^Entity, pos: Vec3) {
+	e.kind = .LightSource
 	e.model = make_cube()
 	e.scale = Vec3{0.2, 0.2, 0.2}
-	e.position = Vec3{1.2, 1.0, 2.0}
+	e.position = pos
 	e.diffuse_texture = make_white_texture()
 	e.specular_texture = make_white_texture()
 

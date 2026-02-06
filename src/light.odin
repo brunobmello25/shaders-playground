@@ -11,6 +11,11 @@ LightKind :: enum {
 	Spot,
 }
 
+LightHandle :: struct {
+	id:    int,
+	index: int,
+}
+
 Light :: struct {
 	kind:                  LightKind,
 	direction:             Vec3,
@@ -92,6 +97,9 @@ setup_world_lights :: proc() {
 		linear_attenuation = 0.09,
 		quadratic_attenuation = 0.032,
 	)
+
+	light_source := entity_create()
+	setup_light_source(light_source, point_light.position)
 	// TODO: add a light source here at the position of this point light
 }
 
