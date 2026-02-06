@@ -98,20 +98,23 @@ float get_attenuation(Light light, float distance) {
 }
 
 vec3 calculate_phong_lighting(Light light, float attenuation, vec3 direction) {
+	vec3 diffuse_color = vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
+	vec3 specular_color = vec3(texture(sampler2D(entity_specular_texture, entity_specular_sampler), uv));
+
 	// ambient
-	vec3 ambient = light.ambient * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
+	vec3 ambient = light.ambient * diffuse_color;
 
 	// diffuse
 	vec3 norm = normalize(normal);
 	vec3 light_dir = normalize(direction);
 	float diff = max(dot(norm, light_dir), 0.0);
-	vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
+	vec3 diffuse = light.diffuse * diff * diffuse_color;
 
 	// specular
 	vec3 view_dir = normalize(view_pos - frag_world_pos);
 	vec3 reflect_dir = reflect(-light_dir, norm);
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), shininess);
-	vec3 specular = light.specular * spec * vec3(texture(sampler2D(entity_specular_texture, entity_specular_sampler), uv));
+	vec3 specular = light.specular * spec * specular_color;
 
 	return (ambient + diffuse + specular) * attenuation;
 }

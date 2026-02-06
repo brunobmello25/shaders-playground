@@ -33,8 +33,8 @@ make_camera :: proc() -> Camera {
 		pos = pos,
 		front = front,
 		up = {0, 1, 0},
-		yaw = -90,
-		pitch = 0,
+		yaw = 0,
+		pitch = 90,
 		spotlight_handle = light_to_handle(spotlight),
 	}
 }
