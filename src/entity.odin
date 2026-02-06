@@ -103,7 +103,7 @@ setup_cube_light_source :: proc(e: ^Entity) {
 		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
 
 		fs_params := shaders.Entity_Fs_Params {
-			viewPos   = camera.pos,
+			view_pos  = camera.pos,
 			shininess = 32.0, // TODO: hardcoded
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
@@ -157,7 +157,7 @@ setup_container :: proc(e: ^Entity) {
 		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
 
 		fs_params := shaders.Entity_Fs_Params {
-			viewPos   = camera.pos,
+			view_pos  = camera.pos,
 			shininess = 32.0, // TODO: hardcoded
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))

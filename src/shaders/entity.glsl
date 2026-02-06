@@ -10,7 +10,7 @@ in vec3 a_normal;
 in vec2 a_uv;
 
 out vec3 normal;
-out vec3 fragWorldPos;
+out vec3 frag_world_pos;
 out vec2 uv;
 
 layout (binding=0) uniform Entity_VS_Params {
@@ -22,7 +22,7 @@ layout (binding=0) uniform Entity_VS_Params {
 
 void main () {
 	gl_Position = projection * view * model * vec4(a_pos, 1.0);
-	fragWorldPos = vec3(model * vec4(a_pos, 1.0));
+	frag_world_pos = vec3(model * vec4(a_pos, 1.0));
 	normal = mat3(normal_matrix) * a_normal;
 	uv = a_uv;
 }
@@ -32,13 +32,13 @@ void main () {
 @fs fs
 
 in vec3 normal;
-in vec3 fragWorldPos;
+in vec3 frag_world_pos;
 in vec2 uv;
 
-out vec4 fragColor;
+out vec4 frag_color;
 
 layout (binding=1) uniform Entity_FS_Params {
-	vec3 viewPos;
+	vec3 view_pos;
 	float shininess;
 };
 
@@ -94,15 +94,15 @@ void main () {
 		vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
 
 		// specular
-		vec3 viewDir = normalize(viewPos - fragWorldPos);
-		vec3 reflectDir = reflect(-light_dir, norm);
-		float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+		vec3 view_dir = normalize(view_pos - frag_world_pos);
+		vec3 reflect_dir = reflect(-light_dir, norm);
+		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), shininess);
 		vec3 specular = light.specular * spec * vec3(texture(sampler2D(entity_specular_texture, entity_specular_sampler), uv));
 
 		result += ambient + diffuse + specular;
 	}
 
-	fragColor = vec4(result, 1.0);
+	frag_color = vec4(result, 1.0);
 }
 
 @end
