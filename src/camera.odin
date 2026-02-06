@@ -16,7 +16,9 @@ Camera :: struct {
 }
 
 make_camera :: proc() -> Camera {
-	pos := Vec3{0, 0, 3}
+	// pos := Vec3{0, 0, 3}
+	pos := Vec3{1.0, 3.0, -15.0}
+
 	front := Vec3{0, 0, -1}
 
 	spotlight := light_create()

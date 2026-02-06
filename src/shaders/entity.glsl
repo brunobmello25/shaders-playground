@@ -97,13 +97,13 @@ float get_attenuation(Light light, float distance) {
 	return 1.0 / (light.constant_attenuation + light.linear_attenuation * distance + light.quadratic_attenuation * (distance * distance));
 }
 
-vec3 calculate_phong_lighting(Light light, float attenuation) {
+vec3 calculate_phong_lighting(Light light, float attenuation, vec3 direction) {
 	// ambient
 	vec3 ambient = light.ambient * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
 
 	// diffuse
 	vec3 norm = normalize(normal);
-	vec3 light_dir = normalize(-light.direction);
+	vec3 light_dir = normalize(direction);
 	float diff = max(dot(norm, light_dir), 0.0);
 	vec3 diffuse = light.diffuse * diff * vec3(texture(sampler2D(entity_diffuse_texture, entity_diffuse_sampler), uv));
 
@@ -124,11 +124,11 @@ void main () {
 		Light light = get_light(i);
 
 		if(light.kind == LIGHT_DIRECTIONAL) {
-			result += calculate_phong_lighting(light, 1.0);
+			result += calculate_phong_lighting(light, 1.0, -light.direction);
 		} else if (light.kind == LIGHT_POINT) {
 			float distance = length(light.position - frag_world_pos);
 			float attenuation = get_attenuation(light, distance);
-			result += calculate_phong_lighting(light, attenuation);
+			result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos);
 		}
 	}
 
