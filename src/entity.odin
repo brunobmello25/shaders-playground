@@ -79,7 +79,7 @@ setup_cube_light_source :: proc(e: ^Entity) {
 					shaders.VIEW_entity_specular_texture = e.specular_texture.view,
 				},
 				samplers = {
-					shaders.SMP_entity_diffuse_sampler = e.specular_texture.sampler,
+					shaders.SMP_entity_diffuse_sampler = e.diffuse_texture.sampler,
 					shaders.SMP_entity_specular_sampler = e.specular_texture.sampler,
 				},
 				// index_buffer = quad.indices,
@@ -138,7 +138,7 @@ setup_container :: proc(e: ^Entity) {
 					shaders.VIEW_entity_specular_texture = e.specular_texture.view,
 				},
 				samplers = {
-					shaders.SMP_entity_diffuse_sampler = e.specular_texture.sampler,
+					shaders.SMP_entity_diffuse_sampler = e.diffuse_texture.sampler,
 					shaders.SMP_entity_specular_sampler = e.specular_texture.sampler,
 				},
 				// index_buffer = quad.indices,

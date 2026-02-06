@@ -62,10 +62,6 @@ init :: proc "c" () {
 		setup_container(container)
 		container.position = position
 	}
-
-
-	light_source := entity_create()
-	setup_cube_light_source(light_source)
 }
 
 cleanup :: proc "c" () {
