@@ -22,6 +22,7 @@ EntityHandle :: struct {
 
 Entity :: struct {
 	kind:             EntityKind,
+	handle:           EntityHandle,
 
 	// drawing
 	model:            Model,
@@ -40,8 +41,9 @@ EntityGlobals :: struct {
 	next_available_index: int,
 }
 
+// TODO: add proper asserts here
 entity_create :: proc() -> ^Entity {
-	// TODO: add proper asserts here
+	// TODO: also should create a free list
 	if g.entity_globals.next_available_index >= MAX_ENTITIES {
 		panic("Max entities reached")
 	}
@@ -49,7 +51,14 @@ entity_create :: proc() -> ^Entity {
 	index := g.entity_globals.next_available_index
 	g.entity_globals.next_available_index += 1
 
-	return &g.entity_globals.entities[index]
+	handle := EntityHandle {
+		id    = index, // TODO: this should be a generation id
+		index = index,
+	}
+
+	entity := &g.entity_globals.entities[index]
+	entity.handle = handle
+	return entity
 }
 
 setup_cube_light_source :: proc(e: ^Entity) {
