@@ -32,18 +32,18 @@ import sg "../../sokol/gfx";
             Image type: ._2D
             Sample type: .FLOAT
             Multisampled: false
-            Bind slot: VIEW_entity_diffuse_texture => 3
+            Bind slot: VIEW_entity_diffuse_texture => 0
         Texture 'entity_specular_texture':
             Image type: ._2D
             Sample type: .FLOAT
             Multisampled: false
-            Bind slot: VIEW_entity_specular_texture => 5
+            Bind slot: VIEW_entity_specular_texture => 1
         Sampler 'entity_diffuse_sampler':
             Type: .FILTERING
-            Bind slot: SMP_entity_diffuse_sampler => 4
+            Bind slot: SMP_entity_diffuse_sampler => 0
         Sampler 'entity_specular_sampler':
             Type: .FILTERING
-            Bind slot: SMP_entity_specular_sampler => 6
+            Bind slot: SMP_entity_specular_sampler => 1
 */
 ATTR_entity_aPos :: 0
 ATTR_entity_aNormal :: 1
@@ -51,10 +51,10 @@ ATTR_entity_aUv :: 2
 UB_Entity_VS_Params :: 0
 UB_FS_Light :: 2
 UB_Entity_FS_Params :: 1
-VIEW_entity_diffuse_texture :: 3
-VIEW_entity_specular_texture :: 5
-SMP_entity_diffuse_sampler :: 4
-SMP_entity_specular_sampler :: 6
+VIEW_entity_diffuse_texture :: 0
+VIEW_entity_specular_texture :: 1
+SMP_entity_diffuse_sampler :: 0
+SMP_entity_specular_sampler :: 1
 Entity_Vs_Params :: struct #align(16) {
     using _: struct #packed {
         model: Mat4,
@@ -442,25 +442,25 @@ entity_shader_desc :: proc "c" (backend: sg.Backend) -> sg.Shader_Desc {
         desc.uniform_blocks[2].glsl_uniforms[0].type = .FLOAT4
         desc.uniform_blocks[2].glsl_uniforms[0].array_count = 4
         desc.uniform_blocks[2].glsl_uniforms[0].glsl_name = "FS_Light"
-        desc.views[3].texture.stage = .FRAGMENT
-        desc.views[3].texture.image_type = ._2D
-        desc.views[3].texture.sample_type = .FLOAT
-        desc.views[3].texture.multisampled = false
-        desc.views[5].texture.stage = .FRAGMENT
-        desc.views[5].texture.image_type = ._2D
-        desc.views[5].texture.sample_type = .FLOAT
-        desc.views[5].texture.multisampled = false
-        desc.samplers[4].stage = .FRAGMENT
-        desc.samplers[4].sampler_type = .FILTERING
-        desc.samplers[6].stage = .FRAGMENT
-        desc.samplers[6].sampler_type = .FILTERING
+        desc.views[0].texture.stage = .FRAGMENT
+        desc.views[0].texture.image_type = ._2D
+        desc.views[0].texture.sample_type = .FLOAT
+        desc.views[0].texture.multisampled = false
+        desc.views[1].texture.stage = .FRAGMENT
+        desc.views[1].texture.image_type = ._2D
+        desc.views[1].texture.sample_type = .FLOAT
+        desc.views[1].texture.multisampled = false
+        desc.samplers[0].stage = .FRAGMENT
+        desc.samplers[0].sampler_type = .FILTERING
+        desc.samplers[1].stage = .FRAGMENT
+        desc.samplers[1].sampler_type = .FILTERING
         desc.texture_sampler_pairs[0].stage = .FRAGMENT
-        desc.texture_sampler_pairs[0].view_slot = 3
-        desc.texture_sampler_pairs[0].sampler_slot = 4
+        desc.texture_sampler_pairs[0].view_slot = 0
+        desc.texture_sampler_pairs[0].sampler_slot = 0
         desc.texture_sampler_pairs[0].glsl_name = "entity_diffuse_texture_entity_diffuse_sampler"
         desc.texture_sampler_pairs[1].stage = .FRAGMENT
-        desc.texture_sampler_pairs[1].view_slot = 5
-        desc.texture_sampler_pairs[1].sampler_slot = 6
+        desc.texture_sampler_pairs[1].view_slot = 1
+        desc.texture_sampler_pairs[1].sampler_slot = 1
         desc.texture_sampler_pairs[1].glsl_name = "entity_specular_texture_entity_specular_sampler"
     case .GLES3:
         desc.vertex_func.source = transmute(cstring)&vs_source_glsl300es
@@ -491,25 +491,25 @@ entity_shader_desc :: proc "c" (backend: sg.Backend) -> sg.Shader_Desc {
         desc.uniform_blocks[2].glsl_uniforms[0].type = .FLOAT4
         desc.uniform_blocks[2].glsl_uniforms[0].array_count = 4
         desc.uniform_blocks[2].glsl_uniforms[0].glsl_name = "FS_Light"
-        desc.views[3].texture.stage = .FRAGMENT
-        desc.views[3].texture.image_type = ._2D
-        desc.views[3].texture.sample_type = .FLOAT
-        desc.views[3].texture.multisampled = false
-        desc.views[5].texture.stage = .FRAGMENT
-        desc.views[5].texture.image_type = ._2D
-        desc.views[5].texture.sample_type = .FLOAT
-        desc.views[5].texture.multisampled = false
-        desc.samplers[4].stage = .FRAGMENT
-        desc.samplers[4].sampler_type = .FILTERING
-        desc.samplers[6].stage = .FRAGMENT
-        desc.samplers[6].sampler_type = .FILTERING
+        desc.views[0].texture.stage = .FRAGMENT
+        desc.views[0].texture.image_type = ._2D
+        desc.views[0].texture.sample_type = .FLOAT
+        desc.views[0].texture.multisampled = false
+        desc.views[1].texture.stage = .FRAGMENT
+        desc.views[1].texture.image_type = ._2D
+        desc.views[1].texture.sample_type = .FLOAT
+        desc.views[1].texture.multisampled = false
+        desc.samplers[0].stage = .FRAGMENT
+        desc.samplers[0].sampler_type = .FILTERING
+        desc.samplers[1].stage = .FRAGMENT
+        desc.samplers[1].sampler_type = .FILTERING
         desc.texture_sampler_pairs[0].stage = .FRAGMENT
-        desc.texture_sampler_pairs[0].view_slot = 3
-        desc.texture_sampler_pairs[0].sampler_slot = 4
+        desc.texture_sampler_pairs[0].view_slot = 0
+        desc.texture_sampler_pairs[0].sampler_slot = 0
         desc.texture_sampler_pairs[0].glsl_name = "entity_diffuse_texture_entity_diffuse_sampler"
         desc.texture_sampler_pairs[1].stage = .FRAGMENT
-        desc.texture_sampler_pairs[1].view_slot = 5
-        desc.texture_sampler_pairs[1].sampler_slot = 6
+        desc.texture_sampler_pairs[1].view_slot = 1
+        desc.texture_sampler_pairs[1].sampler_slot = 1
         desc.texture_sampler_pairs[1].glsl_name = "entity_specular_texture_entity_specular_sampler"
     }
     return desc

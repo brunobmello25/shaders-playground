@@ -43,11 +43,11 @@ layout (binding=1) uniform Entity_FS_Params {
 	float shininess;
 };
 
-layout (binding=3) uniform texture2D entity_diffuse_texture;
-layout (binding=4) uniform sampler entity_diffuse_sampler;
+layout (binding=0) uniform texture2D entity_diffuse_texture;
+layout (binding=1) uniform texture2D entity_specular_texture;
 
-layout (binding=5) uniform texture2D entity_specular_texture;
-layout (binding=6) uniform sampler entity_specular_sampler;
+layout (binding=0) uniform sampler entity_diffuse_sampler;
+layout (binding=1) uniform sampler entity_specular_sampler;
 
 @include_block LightUniform
 
