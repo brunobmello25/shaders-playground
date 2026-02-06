@@ -107,13 +107,8 @@ setup_cube_light_source :: proc(e: ^Entity) {
 			shininess = 32.0, // TODO: hardcoded
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
-		fs_light := shaders.Fs_Light {
-			direction = g.light.direction,
-			ambient   = g.light.ambient,
-			diffuse   = g.light.diffuse,
-			specular  = g.light.specular,
-		}
-		sg.apply_uniforms(shaders.UB_FS_Light, range(&fs_light))
+		fs_lights := lights_to_shader_uniform()
+		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
 		sg.draw(0, e.model.vertex_count, 1)
 	}
@@ -166,13 +161,8 @@ setup_container :: proc(e: ^Entity) {
 			shininess = 32.0, // TODO: hardcoded
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
-		fs_light := shaders.Fs_Light {
-			direction = g.light.direction,
-			ambient   = g.light.ambient,
-			diffuse   = g.light.diffuse,
-			specular  = g.light.specular,
-		}
-		sg.apply_uniforms(shaders.UB_FS_Light, range(&fs_light))
+		fs_lights := lights_to_shader_uniform()
+		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
 		sg.draw(0, e.model.vertex_count, 1)
 	}

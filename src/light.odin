@@ -1,5 +1,7 @@
 package main
 
+import "./shaders"
+
 MAX_LIGHTS :: 8
 
 LightKind :: enum {
@@ -21,6 +23,29 @@ LightGlobals :: struct {
 	lights:               [MAX_LIGHTS]Light,
 	light_count:          int,
 	next_available_index: int,
+}
+
+lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
+	directions := [MAX_LIGHTS][4]f32{}
+	ambients := [MAX_LIGHTS][4]f32{}
+	diffuses := [MAX_LIGHTS][4]f32{}
+	speculars := [MAX_LIGHTS][4]f32{}
+
+	for i in 0 ..< g.light_globals.light_count {
+		light := g.light_globals.lights[i]
+		directions[i] = {light.direction.x, light.direction.y, light.direction.z, 0.0}
+		ambients[i] = {light.ambient.x, light.ambient.y, light.ambient.z, 1.0}
+		diffuses[i] = {light.diffuse.x, light.diffuse.y, light.diffuse.z, 1.0}
+		speculars[i] = {light.specular.x, light.specular.y, light.specular.z, 1.0}
+	}
+
+	return shaders.Fs_Lights {
+		light_count = i32(g.light_globals.light_count),
+		directions = directions,
+		ambients = ambients,
+		diffuses = diffuses,
+		speculars = speculars,
+	}
 }
 
 setup_world_lights :: proc() {

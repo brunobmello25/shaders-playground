@@ -7,9 +7,6 @@ Globals :: struct {
 	entity_shader:         shaders.Shader,
 	light_shader:          shaders.Shader,
 
-	// light
-	light:                 Light,
-
 	//camera
 	camera:                Camera,
 
@@ -28,4 +25,6 @@ init_globals :: proc() {
 	g.entity_shader = shaders.load(.Entity)
 
 	g.camera = make_camera()
+
+	setup_world_lights()
 }
