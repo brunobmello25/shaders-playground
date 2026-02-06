@@ -62,6 +62,7 @@ layout (std140, binding=2) uniform FS_Lights {
 	vec4 diffuses[MAX_LIGHTS];
 	vec4 speculars[MAX_LIGHTS];
 	vec4 attenuations[MAX_LIGHTS]; // x: constant, y: linear, z: quadratic
+	vec4 cutoffs[MAX_LIGHTS]; // x: cutoff
 } fs_lights;
 
 struct Light {
@@ -74,6 +75,7 @@ struct Light {
 	float constant_attenuation;
 	float linear_attenuation;
 	float quadratic_attenuation;
+	float cutoff;
 };
 
 Light get_light(int i) {
@@ -87,6 +89,7 @@ Light get_light(int i) {
 	light.constant_attenuation = fs_lights.attenuations[i].x;
 	light.linear_attenuation = fs_lights.attenuations[i].y;
 	light.quadratic_attenuation = fs_lights.attenuations[i].z;
+	light.cutoff = fs_lights.cutoffs[i].x;
 	return light;
 }
 

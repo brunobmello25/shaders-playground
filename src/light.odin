@@ -30,6 +30,7 @@ Light :: struct {
 	constant_attenuation:  f32,
 	linear_attenuation:    f32,
 	quadratic_attenuation: f32,
+	cutoff:                f32,
 }
 
 LightGlobals :: struct {
@@ -69,10 +70,6 @@ light_create :: proc() -> ^Light {
 	return &g.light_globals.lights[index]
 }
 
-light_destroy :: proc(l: ^Light) {
-	l.kind = .nil
-}
-
 lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 	kinds := [MAX_LIGHTS][4]i32{}
 	directions := [MAX_LIGHTS][4]f32{}
@@ -81,6 +78,8 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 	diffuses := [MAX_LIGHTS][4]f32{}
 	speculars := [MAX_LIGHTS][4]f32{}
 	attenuations := [MAX_LIGHTS][4]f32{}
+	cutoffs := [MAX_LIGHTS][4]f32{}
+
 
 	for i in 0 ..< g.light_globals.light_count {
 		light := g.light_globals.lights[i]
@@ -93,6 +92,7 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 		ambients[i] = {light.ambient.x, light.ambient.y, light.ambient.z, 1.0}
 		diffuses[i] = {light.diffuse.x, light.diffuse.y, light.diffuse.z, 1.0}
 		speculars[i] = {light.specular.x, light.specular.y, light.specular.z, 1.0}
+		cutoffs[i] = {light.cutoff, 0.0, 0.0, 0.0}
 		kinds[i] = [4]i32{i32(light.kind), 0, 0, 0}
 		attenuations[i] = {
 			light.constant_attenuation,
@@ -138,6 +138,13 @@ setup_world_lights :: proc() {
 
 	light_source := entity_create()
 	setup_light_source(light_source, point_light.position, light_to_handle(point_light))
+}
+
+setup_spotlight :: proc(l: ^Light, position: Vec3, direction: Vec3, cutoff: f32) {
+	l.kind = .Spot
+	l.position = position
+	l.direction = direction
+	l.cutoff = cutoff
 }
 
 setup_point_light :: proc(
