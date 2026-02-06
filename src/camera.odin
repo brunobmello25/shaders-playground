@@ -7,12 +7,12 @@ import "core:math/linalg"
 import sapp "../sokol/app"
 
 Camera :: struct {
-	pos:       Vec3,
-	front:     Vec3,
-	up:        Vec3,
-	yaw:       f32,
-	pitch:     f32,
-	spotlight: Light,
+	pos:              Vec3,
+	front:            Vec3,
+	up:               Vec3,
+	yaw:              f32,
+	pitch:            f32,
+	spotlight_handle: LightHandle,
 }
 
 make_camera :: proc() -> Camera {
@@ -27,7 +27,14 @@ make_camera :: proc() -> Camera {
 		cutoff = math.cos(math.to_radians(f32(12.5))),
 	)
 
-	return Camera{pos = pos, front = front, up = {0, 1, 0}, yaw = -90, pitch = 0}
+	return Camera {
+		pos = pos,
+		front = front,
+		up = {0, 1, 0},
+		yaw = -90,
+		pitch = 0,
+		spotlight_handle = light_to_handle(spotlight),
+	}
 }
 
 view_and_projection :: proc(camera: Camera) -> (Mat4, Mat4) {
