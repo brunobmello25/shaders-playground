@@ -31,6 +31,7 @@ Light :: struct {
 	linear_attenuation:    f32,
 	quadratic_attenuation: f32,
 	cutoff:                f32,
+	outer_cutoff:          f32,
 }
 
 LightGlobals :: struct {
@@ -92,7 +93,7 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 		ambients[i] = {light.ambient.x, light.ambient.y, light.ambient.z, 1.0}
 		diffuses[i] = {light.diffuse.x, light.diffuse.y, light.diffuse.z, 1.0}
 		speculars[i] = {light.specular.x, light.specular.y, light.specular.z, 1.0}
-		cutoffs[i] = {light.cutoff, 0.0, 0.0, 0.0}
+		cutoffs[i] = {light.cutoff, light.outer_cutoff, 0.0, 0.0}
 		kinds[i] = [4]i32{i32(light.kind), 0, 0, 0}
 		attenuations[i] = {
 			light.constant_attenuation,
@@ -146,6 +147,7 @@ setup_spotlight :: proc(
 	position: Vec3,
 	direction: Vec3,
 	cutoff: f32,
+	outer_cutoff: f32,
 	ambient: Vec3,
 	diffuse: Vec3,
 	specular: Vec3,
@@ -157,6 +159,7 @@ setup_spotlight :: proc(
 	l.position = position
 	l.direction = direction
 	l.cutoff = cutoff
+	l.outer_cutoff = outer_cutoff
 	l.ambient = ambient
 	l.diffuse = diffuse
 	l.specular = specular

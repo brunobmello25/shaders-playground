@@ -76,6 +76,7 @@ struct Light {
 	float linear_attenuation;
 	float quadratic_attenuation;
 	float cutoff;
+	float outer_cutoff;
 };
 
 Light get_light(int i) {
@@ -90,6 +91,7 @@ Light get_light(int i) {
 	light.linear_attenuation = fs_lights.attenuations[i].y;
 	light.quadratic_attenuation = fs_lights.attenuations[i].z;
 	light.cutoff = fs_lights.cutoffs[i].x;
+	light.outer_cutoff = fs_lights.cutoffs[i].y;
 	return light;
 }
 
@@ -139,12 +141,15 @@ void main () {
 
 			// angle between spotlight direction and light to fragment direction
 			float theta = dot(light_dir, normalize(light.direction));
-			float cutoff_cos = cos(light.cutoff);
 
-			if(theta > cutoff_cos) {
-				float attenuation = get_attenuation(light, distance);
-				result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos);
-			}
+			// Convert angle cutoffs to cosine values for comparison
+			float cutoff_cos = cos(light.cutoff);
+			float outer_cutoff_cos = cos(light.outer_cutoff);
+			float epsilon = cutoff_cos - outer_cutoff_cos;
+			float intensity = clamp((theta - outer_cutoff_cos) / epsilon, 0.0, 1.0);
+
+			float attenuation = get_attenuation(light, distance);
+			result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos) * intensity;
 		}
 	}
 

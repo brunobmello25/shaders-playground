@@ -28,6 +28,7 @@ make_camera :: proc() -> Camera {
 		position = pos,
 		direction = front,
 		cutoff = math.to_radians(f32(12.5)),
+		outer_cutoff = math.to_radians(f32(17.5)),
 		ambient = Vec3{0.2, 0.2, 0.2},
 		diffuse = Vec3{0.5, 0.5, 0.5},
 		specular = Vec3{1.0, 1.0, 1.0},
