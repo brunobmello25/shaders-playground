@@ -11,7 +11,7 @@ MAX_ENTITIES :: 100
 EntityKind :: enum {
 	nil,
 	Container,
-	CubeLightSource,
+	LightSource,
 }
 
 EntityHandle :: struct {
@@ -21,18 +21,22 @@ EntityHandle :: struct {
 }
 
 Entity :: struct {
-	kind:             EntityKind,
+	kind:                      EntityKind,
+	handle:                    EntityHandle,
 
 	// drawing
-	model:            Model,
-	scale:            Vec3,
-	position:         Vec3,
-	diffuse_texture:  Texture,
-	specular_texture: Texture,
+	model:                     Model,
+	scale:                     Vec3,
+	position:                  Vec3,
+	diffuse_texture:           Texture,
+	specular_texture:          Texture,
 
 	// procedures
-	update:           proc(e: ^Entity),
-	draw:             proc(e: ^Entity, camera: Camera),
+	update:                    proc(e: ^Entity),
+	draw:                      proc(e: ^Entity, camera: Camera),
+
+	// light handle for light sources
+	light_source_light_handle: LightHandle,
 }
 
 EntityGlobals :: struct {
@@ -40,8 +44,9 @@ EntityGlobals :: struct {
 	next_available_index: int,
 }
 
+// TODO: add proper asserts here
 entity_create :: proc() -> ^Entity {
-	// TODO: add proper asserts here
+	// TODO: also should create a free list
 	if g.entity_globals.next_available_index >= MAX_ENTITIES {
 		panic("Max entities reached")
 	}
@@ -49,16 +54,24 @@ entity_create :: proc() -> ^Entity {
 	index := g.entity_globals.next_available_index
 	g.entity_globals.next_available_index += 1
 
-	return &g.entity_globals.entities[index]
+	handle := EntityHandle {
+		id    = index, // TODO: this should be a generation id
+		index = index,
+	}
+
+	entity := &g.entity_globals.entities[index]
+	entity.handle = handle
+	return entity
 }
 
-setup_cube_light_source :: proc(e: ^Entity) {
-	e.kind = .CubeLightSource
+setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
+	e.kind = .LightSource
 	e.model = make_cube()
 	e.scale = Vec3{0.2, 0.2, 0.2}
-	e.position = Vec3{1.2, 1.0, 2.0}
+	e.position = pos
 	e.diffuse_texture = make_white_texture()
 	e.specular_texture = make_white_texture()
+	e.light_source_light_handle = light_handle
 
 	e.update = proc(e: ^Entity) {
 	}
@@ -86,25 +99,20 @@ setup_cube_light_source :: proc(e: ^Entity) {
 			},
 		)
 		vs_params := shaders.Entity_Vs_Params {
-			model        = model_matrix,
-			view         = view,
-			projection   = proj,
-			normalMatrix = normal_matrix,
+			model         = model_matrix,
+			view          = view,
+			projection    = proj,
+			normal_matrix = normal_matrix,
 		}
 		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
 
 		fs_params := shaders.Entity_Fs_Params {
-			viewPos   = camera.pos,
+			view_pos  = camera.pos,
 			shininess = 32.0, // TODO: hardcoded
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
-		fs_light := shaders.Fs_Light {
-			direction = g.light.direction,
-			ambient   = g.light.ambient,
-			diffuse   = g.light.diffuse,
-			specular  = g.light.specular,
-		}
-		sg.apply_uniforms(shaders.UB_FS_Light, range(&fs_light))
+		fs_lights := lights_to_shader_uniform()
+		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
 		sg.draw(0, e.model.vertex_count, 1)
 	}
@@ -145,25 +153,20 @@ setup_container :: proc(e: ^Entity) {
 			},
 		)
 		vs_params := shaders.Entity_Vs_Params {
-			model        = model_matrix,
-			view         = view,
-			projection   = proj,
-			normalMatrix = normal_matrix,
+			model         = model_matrix,
+			view          = view,
+			projection    = proj,
+			normal_matrix = normal_matrix,
 		}
 		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
 
 		fs_params := shaders.Entity_Fs_Params {
-			viewPos   = camera.pos,
+			view_pos  = camera.pos,
 			shininess = 32.0, // TODO: hardcoded
 		}
 		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
-		fs_light := shaders.Fs_Light {
-			direction = g.light.direction,
-			ambient   = g.light.ambient,
-			diffuse   = g.light.diffuse,
-			specular  = g.light.specular,
-		}
-		sg.apply_uniforms(shaders.UB_FS_Light, range(&fs_light))
+		fs_lights := lights_to_shader_uniform()
+		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
 		sg.draw(0, e.model.vertex_count, 1)
 	}

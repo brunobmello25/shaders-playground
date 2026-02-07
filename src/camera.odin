@@ -7,15 +7,43 @@ import "core:math/linalg"
 import sapp "../sokol/app"
 
 Camera :: struct {
-	pos:   Vec3,
-	front: Vec3,
-	up:    Vec3,
-	yaw:   f32,
-	pitch: f32,
+	pos:              Vec3,
+	front:            Vec3,
+	up:               Vec3,
+	yaw:              f32,
+	pitch:            f32,
+	spotlight_handle: LightHandle,
 }
 
 make_camera :: proc() -> Camera {
-	return Camera{pos = {0, 0, 3}, front = {0, 0, -1}, up = {0, 1, 0}, yaw = -90, pitch = 0}
+	pos := Vec3{0, 0, 3}
+	// pos := Vec3{1.0, 3.0, -15.0}
+
+	front := Vec3{0, 0, -1}
+
+	spotlight := light_create()
+
+	setup_spotlight(
+		spotlight,
+		position = pos,
+		direction = front,
+		cutoff = math.to_radians(f32(12.5)),
+		ambient = Vec3{0.2, 0.2, 0.2},
+		diffuse = Vec3{0.5, 0.5, 0.5},
+		specular = Vec3{1.0, 1.0, 1.0},
+		constant_attenuation = 1.0,
+		linear_attenuation = 0.09,
+		quadratic_attenuation = 0.032,
+	)
+
+	return Camera {
+		pos = pos,
+		front = front,
+		up = {0, 1, 0},
+		yaw = -90,
+		pitch = 0,
+		spotlight_handle = light_to_handle(spotlight),
+	}
 }
 
 view_and_projection :: proc(camera: Camera) -> (Mat4, Mat4) {
@@ -78,4 +106,10 @@ update_camera :: proc(camera: ^Camera, input: ^Input) {
 	}
 
 	input.mouse_delta = {0, 0}
+
+	lantern := handle_to_light(camera.spotlight_handle)
+	if lantern.kind != .nil {
+		lantern.position = camera.pos
+		lantern.direction = camera.front
+	}
 }

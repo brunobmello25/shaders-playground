@@ -21,9 +21,9 @@ load :: proc(kind: ShaderKind) -> Shader {
 		desc = entity_shader_desc(sg.query_backend())
 		layout = {
 			attrs = {
-				ATTR_entity_aPos = {format = .FLOAT3},
-				ATTR_entity_aNormal = {format = .FLOAT3},
-				ATTR_entity_aUv = {format = .FLOAT2},
+				ATTR_entity_a_pos = {format = .FLOAT3},
+				ATTR_entity_a_normal = {format = .FLOAT3},
+				ATTR_entity_a_uv = {format = .FLOAT2},
 			},
 		}
 	}
