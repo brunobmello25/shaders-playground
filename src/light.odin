@@ -111,6 +111,7 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 		diffuses = diffuses,
 		speculars = speculars,
 		attenuations = attenuations,
+		cutoffs = cutoffs,
 	}
 }
 
@@ -140,11 +141,28 @@ setup_world_lights :: proc() {
 	setup_light_source(light_source, point_light.position, light_to_handle(point_light))
 }
 
-setup_spotlight :: proc(l: ^Light, position: Vec3, direction: Vec3, cutoff: f32) {
+setup_spotlight :: proc(
+	l: ^Light,
+	position: Vec3,
+	direction: Vec3,
+	cutoff: f32,
+	ambient: Vec3,
+	diffuse: Vec3,
+	specular: Vec3,
+	constant_attenuation: f32,
+	linear_attenuation: f32,
+	quadratic_attenuation: f32,
+) {
 	l.kind = .Spot
 	l.position = position
 	l.direction = direction
 	l.cutoff = cutoff
+	l.ambient = ambient
+	l.diffuse = diffuse
+	l.specular = specular
+	l.constant_attenuation = constant_attenuation
+	l.linear_attenuation = linear_attenuation
+	l.quadratic_attenuation = quadratic_attenuation
 }
 
 setup_point_light :: proc(

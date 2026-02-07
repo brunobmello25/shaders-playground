@@ -132,6 +132,19 @@ void main () {
 			float distance = length(light.position - frag_world_pos);
 			float attenuation = get_attenuation(light, distance);
 			result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos);
+		} else if (light.kind == LIGHT_SPOT) {
+			vec3 light_to_frag = frag_world_pos - light.position;
+			float distance = length(light_to_frag);
+			vec3 light_dir = normalize(light_to_frag);
+
+			// angle between spotlight direction and light to fragment direction
+			float theta = dot(light_dir, normalize(light.direction));
+			float cutoff_cos = cos(light.cutoff);
+
+			if(theta > cutoff_cos) {
+				float attenuation = get_attenuation(light, distance);
+				result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos);
+			}
 		}
 	}
 
