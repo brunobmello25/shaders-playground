@@ -4,11 +4,11 @@ package main
 import "base:runtime"
 import "core:log"
 
-import sapp "../sokol/app"
-import sg "../sokol/gfx"
-import sglue "../sokol/glue"
-import shelpers "../sokol/helpers"
-import stime "../sokol/time"
+import sapp "vendor/sokol/sokol/app"
+import sg "vendor/sokol/sokol/gfx"
+import sglue "vendor/sokol/sokol/glue"
+import shelpers "vendor/sokol/sokol/helpers"
+import stime "vendor/sokol/sokol/time"
 
 our_context: runtime.Context
 

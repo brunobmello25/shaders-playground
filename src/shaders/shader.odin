@@ -1,6 +1,6 @@
 package shaders
 
-import sg "../../sokol/gfx"
+import sg "../vendor/sokol/sokol/gfx"
 
 
 Shader :: struct {

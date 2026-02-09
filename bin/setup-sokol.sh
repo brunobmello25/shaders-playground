@@ -1,12 +1,10 @@
 #!/bin/bash
 
 # Setup sokol bindings
-if [ ! -d "./sokol" ]; then
+if [ ! -d "./src/vendor/sokol" ]; then
 	echo "Setting up sokol bindings..."
-	git clone git@github.com:floooh/sokol-odin.git
-	mv ./sokol-odin/sokol ./sokol
-	rm -rf ./sokol-odin
-	pushd ./sokol
+	git submodule update --init --recursive src/vendor/sokol
+	pushd ./src/vendor/sokol/sokol
 	./build_clibs_linux.sh
 	popd
 	echo "Sokol bindings installed."

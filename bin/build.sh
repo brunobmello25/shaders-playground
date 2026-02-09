@@ -7,7 +7,7 @@ BUILD_GAME=${BUILD_GAME:-true}
 mkdir -p ./target
 
 if [ "$BUILD_SOKOL" = "true" ]; then
-	pushd ./sokol
+	pushd ./src/vendor/sokol/sokol
 	./build_clibs_linux.sh
 	popd
 fi

@@ -13,11 +13,11 @@ else
 fi
 
 # Setup assimp bindings
-if [ ! -d "./odin-assimp" ]; then
+if [ ! -d "./src/vendor/assimp" ]; then
 	echo "Setting up assimp bindings..."
-	git clone git@github.com:brunobmello25/odin-assimp.git
+	git submodule update --init --recursive src/vendor/assimp
 	if [ $? -ne 0 ]; then
-		echo "Failed to clone assimp bindings."
+		echo "Failed to initialize assimp submodule."
 		exit 1
 	fi
 	echo "Assimp bindings installed."

@@ -2,7 +2,7 @@ package main
 
 import "core:math/linalg"
 
-import sg "../sokol/gfx"
+import sg "vendor/sokol/sokol/gfx"
 
 import shaders "shaders"
 

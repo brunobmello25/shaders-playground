@@ -4,7 +4,7 @@ import "core:math"
 
 import "core:math/linalg"
 
-import sapp "../sokol/app"
+import sapp "vendor/sokol/sokol/app"
 
 Camera :: struct {
 	pos:              Vec3,

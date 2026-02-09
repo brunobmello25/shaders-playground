@@ -1,5 +1,5 @@
 package shaders
-import sg "../../sokol/gfx";
+import sg "../vendor/sokol/sokol/gfx";
 /*
     #version:1# (machine generated, don't edit!)
 

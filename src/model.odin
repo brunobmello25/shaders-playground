@@ -6,7 +6,7 @@ import "core:c"
 
 import stbi "vendor:stb/image"
 
-import sg "../sokol/gfx"
+import sg "vendor/sokol/sokol/gfx"
 
 Model :: struct {
 	vertices:      sg.Buffer,

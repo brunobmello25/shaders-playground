@@ -1,6 +1,6 @@
 package main
 
-import sapp "../sokol/app"
+import sapp "vendor/sokol/sokol/app"
 
 Input :: struct {
 	mouse_delta:     Vec2,

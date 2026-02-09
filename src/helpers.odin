@@ -1,6 +1,6 @@
 package main
 
-import sg "../sokol/gfx"
+import sg "vendor/sokol/sokol/gfx"
 
 Mat4 :: matrix[4, 4]f32
 Vec4 :: [4]f32
