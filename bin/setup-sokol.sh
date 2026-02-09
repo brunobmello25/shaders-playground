@@ -3,13 +3,18 @@
 # Setup sokol bindings
 if [ ! -d "./src/vendor/sokol" ]; then
 	echo "Setting up sokol bindings..."
-	git submodule update --init --recursive src/vendor/sokol
+	git submodule update --init --recursive -- src/vendor/sokol
+	echo "Sokol bindings installed."
+fi
+
+# Build sokol C libraries
+if [ -d "./src/vendor/sokol/sokol" ]; then
+	echo "Building sokol C libraries..."
 	pushd ./src/vendor/sokol/sokol
 	./build_clibs_linux.sh
 	popd
-	echo "Sokol bindings installed."
 else
-	echo "Sokol bindings already exist, skipping."
+	echo "Sokol directory not found, skipping C library build."
 fi
 
 # Setup sokol shader compiler

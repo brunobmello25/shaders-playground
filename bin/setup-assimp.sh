@@ -15,7 +15,7 @@ fi
 # Setup assimp bindings
 if [ ! -d "./src/vendor/assimp" ]; then
 	echo "Setting up assimp bindings..."
-	git submodule update --init --recursive src/vendor/assimp
+	git submodule update --init --recursive -- src/vendor/assimp
 	if [ $? -ne 0 ]; then
 		echo "Failed to initialize assimp submodule."
 		exit 1
