@@ -1,6 +1,7 @@
 [submodule "src/vendor/sokol"]
 	path = src/vendor/sokol
 	url = git@github.com:floooh/sokol-odin.git
+	ignore = dirty
 [submodule "src/vendor/assimp"]
 	path = src/vendor/assimp
 	url = git@github.com:brunobmello25/odin-assimp.git
