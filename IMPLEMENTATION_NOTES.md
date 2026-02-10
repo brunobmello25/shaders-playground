@@ -14,7 +14,9 @@ The new mesh/model system has been successfully implemented alongside the existi
   - `Texture` - new texture with kind information
   - `Mesh` - single mesh with vertices, indices, textures, and GPU buffers
   - `Model` - collection of meshes
-- **Dual texture cache**: `TextureGlobals` now has both old and new caches
+- **Dual texture cache**: `TextureGlobals` now has:
+  - `DEPRECATED_loaded_textures` - old system cache (map[cstring]DEPRECATED_Texture)
+  - `loaded_textures` - new system cache (map[string]Texture)
 
 ### Phase 2: Mesh Setup ✅
 - `setup_mesh()` - converts CPU vertex data to GPU buffers
@@ -102,4 +104,5 @@ All existing code continues to work unchanged:
 - Scene graph transforms are currently flattened
 - Shader supports 2 texture slots (diffuse, specular) - uses first of each kind
 - All assimp pointer access uses `mem.ptr_offset()` for safety
-- Texture cache keys include both path and kind: "path|TextureKind"
+- New system texture cache keys include both path and kind: "path|TextureKind"
+- Old system uses simple cstring keys for backward compatibility

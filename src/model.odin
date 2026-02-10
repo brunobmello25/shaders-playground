@@ -32,8 +32,8 @@ DEPRECATED_Texture :: struct {
 }
 
 TextureGlobals :: struct {
-	loaded_textures:     map[cstring]DEPRECATED_Texture,  // Old system
-	loaded_new_textures: map[string]Texture,              // New system
+	DEPRECATED_loaded_textures: map[cstring]DEPRECATED_Texture,  // Old system
+	loaded_textures:            map[string]Texture,              // New system
 }
 
 // ============================================================================
@@ -84,7 +84,7 @@ Model :: struct {
 // ============================================================================
 
 load_texture :: proc(path: cstring) -> DEPRECATED_Texture {
-	texture, ok := g.loaded_textures[path]
+	texture, ok := g.DEPRECATED_loaded_textures[path]
 	if ok {
 		return texture
 	}
@@ -126,7 +126,7 @@ load_texture :: proc(path: cstring) -> DEPRECATED_Texture {
 		sampler = sampler,
 		view    = view,
 	}
-	g.loaded_textures[path] = texture
+	g.DEPRECATED_loaded_textures[path] = texture
 	return texture
 }
 
@@ -303,7 +303,7 @@ load_texture_with_kind :: proc(path: string, kind: TextureKind) -> Texture {
 	// Cache key: "path|kind" to allow same image with different kinds
 	cache_key := fmt.tprintf("%s|%v", path, kind)
 
-	if cached, ok := g.loaded_new_textures[cache_key]; ok {
+	if cached, ok := g.loaded_textures[cache_key]; ok {
 		return cached
 	}
 
@@ -356,7 +356,7 @@ load_texture_with_kind :: proc(path: string, kind: TextureKind) -> Texture {
 		path    = strings.clone_to_cstring(path),
 	}
 
-	g.loaded_new_textures[cache_key] = texture
+	g.loaded_textures[cache_key] = texture
 	return texture
 }
 
