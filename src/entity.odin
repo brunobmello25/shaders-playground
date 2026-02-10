@@ -25,11 +25,11 @@ Entity :: struct {
 	handle:                    EntityHandle,
 
 	// drawing
-	model:                     Model,
+	model:                     DEPRECATED_Model,
 	scale:                     Vec3,
 	position:                  Vec3,
-	diffuse_texture:           Texture,
-	specular_texture:          Texture,
+	diffuse_texture:           DEPRECATED_Texture,
+	specular_texture:          DEPRECATED_Texture,
 
 	// procedures
 	update:                    proc(e: ^Entity),
