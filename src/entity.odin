@@ -87,6 +87,7 @@ setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 		sg.apply_bindings(
 			{
 				vertex_buffers = {0 = e.model.vertices},
+				index_buffer = e.model.indices,
 				views = {
 					shaders.VIEW_entity_diffuse_texture = e.diffuse_texture.view,
 					shaders.VIEW_entity_specular_texture = e.specular_texture.view,
@@ -95,7 +96,6 @@ setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 					shaders.SMP_entity_diffuse_sampler = e.diffuse_texture.sampler,
 					shaders.SMP_entity_specular_sampler = e.specular_texture.sampler,
 				},
-				// index_buffer = quad.indices,
 			},
 		)
 		vs_params := shaders.Entity_Vs_Params {
@@ -114,7 +114,7 @@ setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 		fs_lights := lights_to_shader_uniform()
 		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
-		sg.draw(0, e.model.vertex_count, 1)
+		sg.draw(0, i32(e.model.indices_count), 1)
 	}
 }
 
@@ -141,6 +141,7 @@ setup_container :: proc(e: ^Entity) {
 		sg.apply_bindings(
 			{
 				vertex_buffers = {0 = e.model.vertices},
+				index_buffer = e.model.indices,
 				views = {
 					shaders.VIEW_entity_diffuse_texture = e.diffuse_texture.view,
 					shaders.VIEW_entity_specular_texture = e.specular_texture.view,
@@ -149,7 +150,6 @@ setup_container :: proc(e: ^Entity) {
 					shaders.SMP_entity_diffuse_sampler = e.diffuse_texture.sampler,
 					shaders.SMP_entity_specular_sampler = e.specular_texture.sampler,
 				},
-				// index_buffer = quad.indices,
 			},
 		)
 		vs_params := shaders.Entity_Vs_Params {
@@ -168,6 +168,6 @@ setup_container :: proc(e: ^Entity) {
 		fs_lights := lights_to_shader_uniform()
 		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
-		sg.draw(0, e.model.vertex_count, 1)
+		sg.draw(0, i32(e.model.indices_count), 1)
 	}
 }

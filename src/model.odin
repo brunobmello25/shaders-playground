@@ -167,64 +167,76 @@ make_white_texture :: proc() -> DEPRECATED_Texture {
 
 make_cube :: proc() -> DEPRECATED_Model {
 	// odinfmt: disable
+	// 24 vertices total (4 per face × 6 faces)
 	vertices_data := [dynamic]f32{
 		// positions       // normals        // texture coords
+		// Back face (vertices 0-3)
 		-0.5, -0.5, -0.5,  0.0,  0.0, -1.0,  0.0,  0.0,
 		 0.5, -0.5, -0.5,  0.0,  0.0, -1.0,  1.0,  0.0,
 		 0.5,  0.5, -0.5,  0.0,  0.0, -1.0,  1.0,  1.0,
-		 0.5,  0.5, -0.5,  0.0,  0.0, -1.0,  1.0,  1.0,
 		-0.5,  0.5, -0.5,  0.0,  0.0, -1.0,  0.0,  1.0,
-		-0.5, -0.5, -0.5,  0.0,  0.0, -1.0,  0.0,  0.0,
 
+		// Front face (vertices 4-7)
 		-0.5, -0.5,  0.5,  0.0,  0.0,  1.0,  0.0,  0.0,
 		 0.5, -0.5,  0.5,  0.0,  0.0,  1.0,  1.0,  0.0,
 		 0.5,  0.5,  0.5,  0.0,  0.0,  1.0,  1.0,  1.0,
-		 0.5,  0.5,  0.5,  0.0,  0.0,  1.0,  1.0,  1.0,
 		-0.5,  0.5,  0.5,  0.0,  0.0,  1.0,  0.0,  1.0,
-		-0.5, -0.5,  0.5,  0.0,  0.0,  1.0,  0.0,  0.0,
 
+		// Left face (vertices 8-11)
 		-0.5,  0.5,  0.5, -1.0,  0.0,  0.0,  1.0,  1.0,
 		-0.5,  0.5, -0.5, -1.0,  0.0,  0.0,  0.0,  1.0,
 		-0.5, -0.5, -0.5, -1.0,  0.0,  0.0,  0.0,  0.0,
-		-0.5, -0.5, -0.5, -1.0,  0.0,  0.0,  0.0,  0.0,
 		-0.5, -0.5,  0.5, -1.0,  0.0,  0.0,  1.0,  0.0,
-		-0.5,  0.5,  0.5, -1.0,  0.0,  0.0,  1.0,  1.0,
 
+		// Right face (vertices 12-15)
 		 0.5,  0.5,  0.5,  1.0,  0.0,  0.0,  0.0,  1.0,
 		 0.5,  0.5, -0.5,  1.0,  0.0,  0.0,  1.0,  1.0,
 		 0.5, -0.5, -0.5,  1.0,  0.0,  0.0,  1.0,  0.0,
-		 0.5, -0.5, -0.5,  1.0,  0.0,  0.0,  1.0,  0.0,
 		 0.5, -0.5,  0.5,  1.0,  0.0,  0.0,  0.0,  0.0,
-		 0.5,  0.5,  0.5,  1.0,  0.0,  0.0,  0.0,  1.0,
 
+		// Bottom face (vertices 16-19)
 		-0.5, -0.5, -0.5,  0.0, -1.0,  0.0,  0.0,  1.0,
 		 0.5, -0.5, -0.5,  0.0, -1.0,  0.0,  1.0,  1.0,
 		 0.5, -0.5,  0.5,  0.0, -1.0,  0.0,  1.0,  0.0,
-		 0.5, -0.5,  0.5,  0.0, -1.0,  0.0,  1.0,  0.0,
 		-0.5, -0.5,  0.5,  0.0, -1.0,  0.0,  0.0,  0.0,
-		-0.5, -0.5, -0.5,  0.0, -1.0,  0.0,  0.0,  1.0,
 
+		// Top face (vertices 20-23)
 		-0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  0.0,  1.0,
 		 0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  1.0,  1.0,
 		 0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  1.0,  0.0,
-		 0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  1.0,  0.0,
-		-0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  0.0,  0.0,
-		-0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  0.0,  1.0
+		-0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  0.0,  0.0
 	}
 	// odinfmt: enable
+
+	// 6 faces × 2 triangles × 3 indices = 36 indices
+	// Using indices to reference the 24 unique vertices (4 per face)
+	indices_data := [dynamic]u32{
+		// Back face
+		0, 1, 2,  2, 3, 0,
+		// Front face
+		4, 5, 6,  6, 7, 4,
+		// Left face
+		8, 9, 10,  10, 11, 8,
+		// Right face
+		12, 13, 14,  14, 15, 12,
+		// Bottom face
+		16, 17, 18,  18, 19, 16,
+		// Top face
+		20, 21, 22,  22, 23, 20,
+	}
 
 	vertices_buffer := sg.make_buffer(
 		{data = range(vertices_data[:]), size = len(vertices_data) * size_of(vertices_data[0])},
 	)
-	// indices_buffer := sg.make_buffer(
-	// 	{
-	// 		data = range(indices_data[:]),
-	// 		size = len(indices_data) * size_of(indices_data[0]),
-	// 		usage = {index_buffer = true},
-	// 	},
-	// )
+	indices_buffer := sg.make_buffer(
+		{
+			data = range(indices_data[:]),
+			size = len(indices_data) * size_of(indices_data[0]),
+			usage = {index_buffer = true},
+		},
+	)
 
-	return DEPRECATED_Model{vertices = vertices_buffer, indices = {}, vertex_count = 36, indices_count = 0}
+	return DEPRECATED_Model{vertices = vertices_buffer, indices = indices_buffer, vertex_count = 24, indices_count = 36}
 }
 
 // ============================================================================
@@ -260,6 +272,7 @@ setup_mesh :: proc(mesh: ^Mesh) {
 		{
 			data = range(mesh.indices[:]),
 			size = len(mesh.indices) * size_of(u32),
+			usage = {index_buffer = true},
 		},
 	)
 }
@@ -362,12 +375,10 @@ load_texture_with_kind :: proc(path: string, kind: TextureKind) -> Texture {
 
 // Phase 4: Assimp Integration
 aistring_to_string :: proc(ai_str: ^assimp.aiString) -> string {
-	if ai_str.length == 0 do return ""
-	data_ptr := cast(^u8)&ai_str.data
+	if ai_str == nil || ai_str.length == 0 do return ""
+	// Copy the string data from the fixed array
 	bytes := make([]u8, ai_str.length)
-	for i in 0 ..< ai_str.length {
-		bytes[i] = mem.ptr_offset(data_ptr, i)^
-	}
+	copy(bytes, ai_str.data[:ai_str.length])
 	return string(bytes)
 }
 
@@ -534,10 +545,21 @@ load_model :: proc(filepath: string) -> (Model, bool) {
 	last_slash := strings.last_index(filepath, "/")
 	directory := filepath[:last_slash] if last_slash >= 0 else "."
 
-	// Process scene graph
+	// Process meshes
 	meshes := make([dynamic]Mesh)
+
+	// Try node hierarchy first
 	if scene.mRootNode != nil {
 		process_node(scene.mRootNode, scene, &meshes, directory)
+	}
+
+	// If no meshes from nodes, process all scene meshes directly
+	if len(meshes) == 0 && scene.mNumMeshes > 0 {
+		for i in 0 ..< scene.mNumMeshes {
+			ai_mesh := mem.ptr_offset(scene.mMeshes, int(i))^
+			mesh := process_mesh(ai_mesh, scene, directory)
+			append(&meshes, mesh)
+		}
 	}
 
 	log.infof("Loaded model: %s (%d meshes)", filepath, len(meshes))

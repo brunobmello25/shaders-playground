@@ -31,7 +31,12 @@ load :: proc(kind: ShaderKind) -> Shader {
 
 	shader := sg.make_shader(desc)
 	pipeline := sg.make_pipeline(
-		{shader = shader, layout = layout, depth = {compare = .LESS_EQUAL, write_enabled = true}},
+		{
+			shader = shader,
+			layout = layout,
+			index_type = .UINT32,
+			depth = {compare = .LESS_EQUAL, write_enabled = true},
+		},
 	)
 
 	return Shader{kind = kind, pipeline = pipeline}

@@ -26,5 +26,9 @@ init_globals :: proc() {
 
 	g.camera = make_camera()
 
+	// Initialize texture maps
+	g.DEPRECATED_loaded_textures = make(map[cstring]DEPRECATED_Texture)
+	g.loaded_textures = make(map[string]Texture)
+
 	setup_world_lights()
 }

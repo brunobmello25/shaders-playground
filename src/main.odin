@@ -3,6 +3,7 @@ package main
 
 import "base:runtime"
 import "core:log"
+import "core:math/linalg"
 
 import sapp "vendor/sokol/sokol/app"
 import sg "vendor/sokol/sokol/gfx"
@@ -10,7 +11,11 @@ import sglue "vendor/sokol/sokol/glue"
 import shelpers "vendor/sokol/sokol/helpers"
 import stime "vendor/sokol/sokol/time"
 
+import shaders "shaders"
+
 our_context: runtime.Context
+
+test_backpack_model: Model
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -40,10 +45,21 @@ init :: proc "c" () {
 	stime.setup()
 
 	sg.setup(
-		{environment = sglue.environment(), logger = sg.Logger(shelpers.logger(&our_context))},
+		{
+			environment      = sglue.environment(),
+			logger           = sg.Logger(shelpers.logger(&our_context)),
+			buffer_pool_size = 512, // Increased from default 128 to handle large models
+			image_pool_size  = 512, // Also increase image pool for textures
+		},
 	)
 
 	init_globals()
+	ok: bool
+	test_backpack_model, ok = load_model("res/backpack/backpack.obj")
+	if !ok {
+		log.panic("Failed to load model")
+	}
+	log.infof("Model loaded successfully: %d meshes", len(test_backpack_model.meshes))
 
 	cube_positions := []Vec3 {
 		{0.0, 0.0, 0.0},
@@ -90,6 +106,36 @@ frame :: proc "c" () {
 
 		e.update(&e)
 		e.draw(&e, g.camera)
+	}
+
+	// Draw the backpack model
+	{
+		model_matrix := linalg.matrix4_translate_f32(Vec3{0, 0, -5})
+		normal_matrix := linalg.transpose(linalg.inverse(model_matrix))
+		view, proj := view_and_projection(g.camera)
+
+		sg.apply_pipeline(g.entity_shader.pipeline)
+
+		// Apply global uniforms
+		vs_params := shaders.Entity_Vs_Params {
+			model         = model_matrix,
+			view          = view,
+			projection    = proj,
+			normal_matrix = normal_matrix,
+		}
+		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
+
+		fs_params := shaders.Entity_Fs_Params {
+			view_pos  = g.camera.pos,
+			shininess = 32.0,
+		}
+		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
+
+		fs_lights := lights_to_shader_uniform()
+		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
+
+		// Now draw the model
+		draw_model(&test_backpack_model, g.camera)
 	}
 
 	sg.end_pass()
