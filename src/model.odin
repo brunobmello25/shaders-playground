@@ -10,9 +10,9 @@ import "core:strings"
 
 import stbi "vendor:stb/image"
 
-import sg "vendor/sokol/sokol/gfx"
-import assimp "vendor/assimp"
 import shaders "shaders"
+import assimp "vendor/assimp"
+import sg "vendor/sokol/sokol/gfx"
 
 // ============================================================================
 // DEPRECATED STRUCTS (Old system - for backward compatibility)
@@ -32,8 +32,8 @@ DEPRECATED_Texture :: struct {
 }
 
 TextureGlobals :: struct {
-	DEPRECATED_loaded_textures: map[cstring]DEPRECATED_Texture,  // Old system
-	loaded_textures:            map[string]Texture,              // New system
+	DEPRECATED_loaded_textures: map[cstring]DEPRECATED_Texture, // Old system
+	loaded_textures:            map[string]Texture, // New system
 }
 
 // ============================================================================
@@ -210,6 +210,7 @@ make_cube :: proc() -> DEPRECATED_Model {
 
 	// 6 faces × 2 triangles × 3 indices = 36 indices
 	// Using indices to reference the 24 unique vertices (4 per face)
+	// odinfmt: disable
 	indices_data := [dynamic]u32{
 		// Back face
 		0, 1, 2,  2, 3, 0,
@@ -224,6 +225,7 @@ make_cube :: proc() -> DEPRECATED_Model {
 		// Top face
 		20, 21, 22,  22, 23, 20,
 	}
+	// odinfmt: enable
 
 	vertices_buffer := sg.make_buffer(
 		{data = range(vertices_data[:]), size = len(vertices_data) * size_of(vertices_data[0])},
@@ -236,7 +238,12 @@ make_cube :: proc() -> DEPRECATED_Model {
 		},
 	)
 
-	return DEPRECATED_Model{vertices = vertices_buffer, indices = indices_buffer, vertex_count = 24, indices_count = 36}
+	return DEPRECATED_Model {
+		vertices = vertices_buffer,
+		indices = indices_buffer,
+		vertex_count = 24,
+		indices_count = 36,
+	}
 }
 
 // ============================================================================
@@ -440,11 +447,7 @@ load_material_textures :: proc(
 	}
 }
 
-process_mesh :: proc(
-	ai_mesh: ^assimp.aiMesh,
-	scene: ^assimp.aiScene,
-	directory: string,
-) -> Mesh {
+process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory: string) -> Mesh {
 	vertices := make([dynamic]Vertex, 0, ai_mesh.mNumVertices)
 	indices := make([dynamic]u32)
 	textures := make([dynamic]Texture)
@@ -458,6 +461,7 @@ process_mesh :: proc(
 		vertex.position = Vec3{pos.x, pos.y, pos.z}
 
 		// Normal (may be nil)
+		// TODO: what should we do if normals are missing?
 		if ai_mesh.mNormals != nil {
 			normal := mem.ptr_offset(ai_mesh.mNormals, int(i))
 			vertex.normal = Vec3{normal.x, normal.y, normal.z}
@@ -524,7 +528,12 @@ process_node :: proc(
 	}
 }
 
-load_model :: proc(filepath: string) -> (Model, bool) {
+load_model :: proc(
+	filepath: string, // TODO: currently this file path is linux/mac only but we should make this platform agnostic using "core:path" instead
+) -> (
+	Model,
+	bool,
+) {
 	flags :=
 		u32(assimp.aiPostProcessSteps.Triangulate) |
 		u32(assimp.aiPostProcessSteps.FlipUVs) |
@@ -609,8 +618,8 @@ draw_mesh :: proc(mesh: ^Mesh, camera: Camera) {
 	sg.draw(0, i32(len(mesh.indices)), 1)
 }
 
+// Caller must apply pipeline and set global uniforms before calling
 draw_model :: proc(model: ^Model, camera: Camera) {
-	// Caller must apply pipeline and set global uniforms before calling
 	for &mesh in model.meshes {
 		draw_mesh(&mesh, camera)
 	}
