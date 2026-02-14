@@ -1,5 +1,6 @@
 package main
 
+import "core:log"
 import "core:math/linalg"
 
 import sg "vendor/sokol/sokol/gfx"
@@ -65,8 +66,7 @@ entity_create :: proc() -> ^Entity {
 }
 
 entity_draw :: proc(e: ^Entity, camera: Camera) {
-	model_matrix :=
-		linalg.matrix4_translate_f32(e.position) * linalg.matrix4_scale_f32(e.scale)
+	model_matrix := linalg.matrix4_translate_f32(e.position) * linalg.matrix4_scale_f32(e.scale)
 	normal_matrix := linalg.transpose(linalg.inverse(model_matrix))
 
 	view, proj := view_and_projection(camera)
@@ -94,7 +94,9 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 
 setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 	e.kind = .LightSource
-	e.model = &g.bulb_model
+	bulb_model, ok := model.load_model(.Bulb)
+	if !ok {log.panic("Failed to load bulb model")}
+	e.model = bulb_model
 	e.scale = Vec3{0.2, 0.2, 0.2}
 	e.position = pos
 	e.light_source_light_handle = light_handle
@@ -107,7 +109,9 @@ setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 
 setup_container :: proc(e: ^Entity) {
 	e.kind = .Container
-	e.model = &g.container_model
+	container_model, ok := model.load_model(.Container)
+	if !ok {log.panic("Failed to load container model")}
+	e.model = container_model
 	e.scale = Vec3{1.0, 1.0, 1.0}
 	e.position = Vec3{0.0, 0.0, 0.0}
 
@@ -119,7 +123,9 @@ setup_container :: proc(e: ^Entity) {
 
 setup_backpack :: proc(e: ^Entity) {
 	e.kind = .Backpack
-	e.model = &g.backpack_model
+	backpack_model, ok := model.load_model(.Backpack)
+	if !ok {log.panic("Failed to load backpack model")}
+	e.model = backpack_model
 	e.scale = Vec3{1.0, 1.0, 1.0}
 	e.position = Vec3{0.0, 0.0, -5.0}
 

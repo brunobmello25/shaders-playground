@@ -17,6 +17,12 @@ import sg "../vendor/sokol/sokol/gfx"
 Vec3 :: [3]f32
 Vec2 :: [2]f32
 
+ModelKind :: enum {
+	Bulb,
+	Backpack,
+	Container,
+}
+
 range :: proc {
 	range_from_slice,
 	range_from_struct,
@@ -30,8 +36,9 @@ range_from_slice :: proc(vertices: []$T) -> sg.Range {
 	return sg.Range{ptr = raw_data(vertices), size = len(vertices) * size_of(T)}
 }
 
-// Package-level texture cache
+// Package-level caches
 loaded_textures: map[string]Texture
+loaded_models: map[string]Model
 
 // ============================================================================
 // Types
@@ -367,9 +374,26 @@ process_node :: proc(
 // Public API
 // ============================================================================
 
-load_model :: proc(
-	filepath: string, // TODO: currently this file path is linux/mac only but we should make this platform agnostic using "core:path" instead
-) -> (Model, bool) {
+kind_to_path :: proc(kind: ModelKind) -> string {
+	switch kind { 	// TODO: currently this file path is linux/mac only but we should make this platform agnostic using "core:path" instead
+	case .Bulb:
+		return "res/bulb/bulb.obj"
+	case .Backpack:
+		return "res/backpack/backpack.obj"
+	case .Container:
+		return "res/container/container.obj"
+	}
+
+	panic("unreachable")
+}
+
+load_model :: proc(kind: ModelKind) -> (^Model, bool) {
+	filepath := kind_to_path(kind)
+
+	if cached, ok := &loaded_models[filepath]; ok {
+		return cached, true
+	}
+
 	flags :=
 		u32(assimp.aiPostProcessSteps.Triangulate) |
 		u32(assimp.aiPostProcessSteps.FlipUVs) |
@@ -382,7 +406,7 @@ load_model :: proc(
 	scene := assimp.import_file(filepath_cstr, flags)
 	if scene == nil {
 		log.errorf("Failed to load model: %s", filepath)
-		return Model{}, false
+		return nil, false
 	}
 	defer assimp.release_import(scene)
 
@@ -408,7 +432,11 @@ load_model :: proc(
 	}
 
 	log.infof("Loaded model: %s (%d meshes)", filepath, len(meshes))
-	return Model{meshes = meshes[:], directory = directory}, true
+	loaded_models[filepath] = Model {
+		meshes    = meshes[:],
+		directory = directory,
+	}
+	return &loaded_models[filepath], true
 }
 
 draw_mesh :: proc(mesh: ^Mesh) {
