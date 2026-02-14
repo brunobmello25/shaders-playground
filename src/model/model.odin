@@ -387,7 +387,7 @@ kind_to_path :: proc(kind: ModelKind) -> string {
 	panic("unreachable")
 }
 
-load_model :: proc(kind: ModelKind) -> (^Model, bool) {
+load :: proc(kind: ModelKind) -> (^Model, bool) {
 	filepath := kind_to_path(kind)
 
 	if cached, ok := &loaded_models[filepath]; ok {

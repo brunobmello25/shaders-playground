@@ -94,7 +94,7 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 
 setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 	e.kind = .LightSource
-	bulb_model, ok := model.load_model(.Bulb)
+	bulb_model, ok := model.load(.Bulb)
 	if !ok {log.panic("Failed to load bulb model")}
 	e.model = bulb_model
 	e.scale = Vec3{0.2, 0.2, 0.2}
@@ -109,7 +109,7 @@ setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 
 setup_container :: proc(e: ^Entity) {
 	e.kind = .Container
-	container_model, ok := model.load_model(.Container)
+	container_model, ok := model.load(.Container)
 	if !ok {log.panic("Failed to load container model")}
 	e.model = container_model
 	e.scale = Vec3{1.0, 1.0, 1.0}
@@ -123,7 +123,7 @@ setup_container :: proc(e: ^Entity) {
 
 setup_backpack :: proc(e: ^Entity) {
 	e.kind = .Backpack
-	backpack_model, ok := model.load_model(.Backpack)
+	backpack_model, ok := model.load(.Backpack)
 	if !ok {log.panic("Failed to load backpack model")}
 	e.model = backpack_model
 	e.scale = Vec3{1.0, 1.0, 1.0}
