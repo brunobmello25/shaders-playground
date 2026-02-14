@@ -1,6 +1,6 @@
 #+feature dynamic-literals
 
-package main
+package model
 
 import "core:c"
 import "core:fmt"
@@ -10,34 +10,31 @@ import "core:strings"
 
 import stbi "vendor:stb/image"
 
-import shaders "shaders"
-import assimp "vendor/assimp"
-import sg "vendor/sokol/sokol/gfx"
+import shaders "../shaders"
+import assimp "../vendor/assimp"
+import sg "../vendor/sokol/sokol/gfx"
 
-// ============================================================================
-// DEPRECATED STRUCTS (Old system - for backward compatibility)
-// ============================================================================
+Vec3 :: [3]f32
+Vec2 :: [2]f32
 
-DEPRECATED_Model :: struct {
-	vertices:      sg.Buffer,
-	indices:       sg.Buffer,
-	indices_count: int,
-	vertex_count:  int,
+range :: proc {
+	range_from_slice,
+	range_from_struct,
 }
 
-DEPRECATED_Texture :: struct {
-	image:   sg.Image,
-	sampler: sg.Sampler,
-	view:    sg.View,
+range_from_struct :: proc(data: ^$T) -> sg.Range {
+	return sg.Range{ptr = data, size = size_of(T)}
 }
 
-TextureGlobals :: struct {
-	DEPRECATED_loaded_textures: map[cstring]DEPRECATED_Texture, // Old system
-	loaded_textures:            map[string]Texture, // New system
+range_from_slice :: proc(vertices: []$T) -> sg.Range {
+	return sg.Range{ptr = raw_data(vertices), size = len(vertices) * size_of(T)}
 }
+
+// Package-level texture cache
+loaded_textures: map[string]Texture
 
 // ============================================================================
-// NEW MESH/MODEL SYSTEM
+// Types
 // ============================================================================
 
 Vertex :: struct {
@@ -80,177 +77,9 @@ Model :: struct {
 }
 
 // ============================================================================
-// DEPRECATED TEXTURE LOADING (Old system)
+// Mesh Setup
 // ============================================================================
 
-load_texture :: proc(path: cstring) -> DEPRECATED_Texture {
-	texture, ok := g.DEPRECATED_loaded_textures[path]
-	if ok {
-		return texture
-	}
-
-	width, height, channels: c.int
-
-	stbi.set_flip_vertically_on_load(1)
-	img_bytes := stbi.load(path, &width, &height, &channels, 4)
-	defer stbi.image_free(img_bytes)
-
-	image := sg.make_image(
-		{
-			width = width,
-			height = height,
-			pixel_format = .RGBA8,
-			data = {mip_levels = {0 = sg.Range{ptr = img_bytes, size = uint(width * height * 4)}}},
-		},
-	)
-	sampler := sg.make_sampler(
-		{
-			mag_filter = .LINEAR,
-			min_filter = .NEAREST,
-			wrap_v = .CLAMP_TO_EDGE,
-			wrap_u = .CLAMP_TO_EDGE,
-		},
-	)
-	view := sg.make_view(
-		{
-			texture = {
-				image = image,
-				slices = {base = 0, count = 1},
-				mip_levels = {base = 0, count = 1},
-			},
-		},
-	)
-
-	texture = DEPRECATED_Texture {
-		image   = image,
-		sampler = sampler,
-		view    = view,
-	}
-	g.DEPRECATED_loaded_textures[path] = texture
-	return texture
-}
-
-make_white_texture :: proc() -> DEPRECATED_Texture {
-	white_pixel := [4]u8{255, 255, 255, 255}
-
-	image := sg.make_image(
-		{
-			width = 1,
-			height = 1,
-			pixel_format = .RGBA8,
-			data = {mip_levels = {0 = sg.Range{ptr = &white_pixel, size = size_of(white_pixel)}}},
-		},
-	)
-
-	sampler := sg.make_sampler(
-		{
-			mag_filter = .LINEAR,
-			min_filter = .NEAREST,
-			wrap_v = .CLAMP_TO_EDGE,
-			wrap_u = .CLAMP_TO_EDGE,
-		},
-	)
-
-	view := sg.make_view(
-		{
-			texture = {
-				image = image,
-				slices = {base = 0, count = 1},
-				mip_levels = {base = 0, count = 1},
-			},
-		},
-	)
-
-	return DEPRECATED_Texture{image = image, sampler = sampler, view = view}
-}
-
-
-make_cube :: proc() -> DEPRECATED_Model {
-	// odinfmt: disable
-	// 24 vertices total (4 per face × 6 faces)
-	vertices_data := [dynamic]f32{
-		// positions       // normals        // texture coords
-		// Back face (vertices 0-3)
-		-0.5, -0.5, -0.5,  0.0,  0.0, -1.0,  0.0,  0.0,
-		 0.5, -0.5, -0.5,  0.0,  0.0, -1.0,  1.0,  0.0,
-		 0.5,  0.5, -0.5,  0.0,  0.0, -1.0,  1.0,  1.0,
-		-0.5,  0.5, -0.5,  0.0,  0.0, -1.0,  0.0,  1.0,
-
-		// Front face (vertices 4-7)
-		-0.5, -0.5,  0.5,  0.0,  0.0,  1.0,  0.0,  0.0,
-		 0.5, -0.5,  0.5,  0.0,  0.0,  1.0,  1.0,  0.0,
-		 0.5,  0.5,  0.5,  0.0,  0.0,  1.0,  1.0,  1.0,
-		-0.5,  0.5,  0.5,  0.0,  0.0,  1.0,  0.0,  1.0,
-
-		// Left face (vertices 8-11)
-		-0.5,  0.5,  0.5, -1.0,  0.0,  0.0,  1.0,  1.0,
-		-0.5,  0.5, -0.5, -1.0,  0.0,  0.0,  0.0,  1.0,
-		-0.5, -0.5, -0.5, -1.0,  0.0,  0.0,  0.0,  0.0,
-		-0.5, -0.5,  0.5, -1.0,  0.0,  0.0,  1.0,  0.0,
-
-		// Right face (vertices 12-15)
-		 0.5,  0.5,  0.5,  1.0,  0.0,  0.0,  0.0,  1.0,
-		 0.5,  0.5, -0.5,  1.0,  0.0,  0.0,  1.0,  1.0,
-		 0.5, -0.5, -0.5,  1.0,  0.0,  0.0,  1.0,  0.0,
-		 0.5, -0.5,  0.5,  1.0,  0.0,  0.0,  0.0,  0.0,
-
-		// Bottom face (vertices 16-19)
-		-0.5, -0.5, -0.5,  0.0, -1.0,  0.0,  0.0,  1.0,
-		 0.5, -0.5, -0.5,  0.0, -1.0,  0.0,  1.0,  1.0,
-		 0.5, -0.5,  0.5,  0.0, -1.0,  0.0,  1.0,  0.0,
-		-0.5, -0.5,  0.5,  0.0, -1.0,  0.0,  0.0,  0.0,
-
-		// Top face (vertices 20-23)
-		-0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  0.0,  1.0,
-		 0.5,  0.5, -0.5,  0.0,  1.0,  0.0,  1.0,  1.0,
-		 0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  1.0,  0.0,
-		-0.5,  0.5,  0.5,  0.0,  1.0,  0.0,  0.0,  0.0
-	}
-	// odinfmt: enable
-
-	// 6 faces × 2 triangles × 3 indices = 36 indices
-	// Using indices to reference the 24 unique vertices (4 per face)
-	// odinfmt: disable
-	indices_data := [dynamic]u32{
-		// Back face
-		0, 1, 2,  2, 3, 0,
-		// Front face
-		4, 5, 6,  6, 7, 4,
-		// Left face
-		8, 9, 10,  10, 11, 8,
-		// Right face
-		12, 13, 14,  14, 15, 12,
-		// Bottom face
-		16, 17, 18,  18, 19, 16,
-		// Top face
-		20, 21, 22,  22, 23, 20,
-	}
-	// odinfmt: enable
-
-	vertices_buffer := sg.make_buffer(
-		{data = range(vertices_data[:]), size = len(vertices_data) * size_of(vertices_data[0])},
-	)
-	indices_buffer := sg.make_buffer(
-		{
-			data = range(indices_data[:]),
-			size = len(indices_data) * size_of(indices_data[0]),
-			usage = {index_buffer = true},
-		},
-	)
-
-	return DEPRECATED_Model {
-		vertices = vertices_buffer,
-		indices = indices_buffer,
-		vertex_count = 24,
-		indices_count = 36,
-	}
-}
-
-// ============================================================================
-// NEW SYSTEM IMPLEMENTATION
-// ============================================================================
-
-// Phase 2: Mesh Setup
 setup_mesh :: proc(mesh: ^Mesh) {
 	// Convert Vertex slice to interleaved float array
 	// Layout: position(3) + normal(3) + texcoord(2) = 8 floats per vertex
@@ -284,7 +113,10 @@ setup_mesh :: proc(mesh: ^Mesh) {
 	)
 }
 
-// Phase 3: Texture Loading
+// ============================================================================
+// Texture Loading
+// ============================================================================
+
 make_white_texture_with_kind :: proc(kind: TextureKind) -> Texture {
 	white_pixel := [4]u8{255, 255, 255, 255}
 
@@ -323,7 +155,7 @@ load_texture_with_kind :: proc(path: string, kind: TextureKind) -> Texture {
 	// Cache key: "path|kind" to allow same image with different kinds
 	cache_key := fmt.tprintf("%s|%v", path, kind)
 
-	if cached, ok := g.loaded_textures[cache_key]; ok {
+	if cached, ok := loaded_textures[cache_key]; ok {
 		return cached
 	}
 
@@ -376,11 +208,14 @@ load_texture_with_kind :: proc(path: string, kind: TextureKind) -> Texture {
 		path    = strings.clone_to_cstring(path),
 	}
 
-	g.loaded_textures[cache_key] = texture
+	loaded_textures[cache_key] = texture
 	return texture
 }
 
-// Phase 4: Assimp Integration
+// ============================================================================
+// Assimp Integration
+// ============================================================================
+
 aistring_to_string :: proc(ai_str: ^assimp.aiString) -> string {
 	if ai_str == nil || ai_str.length == 0 do return ""
 	// Copy the string data from the fixed array
@@ -528,12 +363,13 @@ process_node :: proc(
 	}
 }
 
+// ============================================================================
+// Public API
+// ============================================================================
+
 load_model :: proc(
 	filepath: string, // TODO: currently this file path is linux/mac only but we should make this platform agnostic using "core:path" instead
-) -> (
-	Model,
-	bool,
-) {
+) -> (Model, bool) {
 	flags :=
 		u32(assimp.aiPostProcessSteps.Triangulate) |
 		u32(assimp.aiPostProcessSteps.FlipUVs) |
@@ -575,8 +411,7 @@ load_model :: proc(
 	return Model{meshes = meshes[:], directory = directory}, true
 }
 
-// Phase 5: Drawing
-draw_mesh :: proc(mesh: ^Mesh, camera: Camera) {
+draw_mesh :: proc(mesh: ^Mesh) {
 	bindings := sg.Bindings {
 		vertex_buffers = {0 = mesh.vertex_buffer},
 		index_buffer = mesh.index_buffer,
@@ -619,8 +454,8 @@ draw_mesh :: proc(mesh: ^Mesh, camera: Camera) {
 }
 
 // Caller must apply pipeline and set global uniforms before calling
-draw_model :: proc(model: ^Model, camera: Camera) {
-	for &mesh in model.meshes {
-		draw_mesh(&mesh, camera)
+draw_model :: proc(m: ^Model) {
+	for &mesh in m.meshes {
+		draw_mesh(&mesh)
 	}
 }

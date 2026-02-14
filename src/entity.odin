@@ -4,6 +4,7 @@ import "core:math/linalg"
 
 import sg "vendor/sokol/sokol/gfx"
 
+import model "model"
 import shaders "shaders"
 
 MAX_ENTITIES :: 100
@@ -12,6 +13,7 @@ EntityKind :: enum {
 	nil,
 	Container,
 	LightSource,
+	Backpack,
 }
 
 EntityHandle :: struct {
@@ -25,11 +27,9 @@ Entity :: struct {
 	handle:                    EntityHandle,
 
 	// drawing
-	model:                     DEPRECATED_Model,
+	model:                     ^model.Model,
 	scale:                     Vec3,
 	position:                  Vec3,
-	diffuse_texture:           DEPRECATED_Texture,
-	specular_texture:          DEPRECATED_Texture,
 
 	// procedures
 	update:                    proc(e: ^Entity),
@@ -64,110 +64,67 @@ entity_create :: proc() -> ^Entity {
 	return entity
 }
 
+entity_draw :: proc(e: ^Entity, camera: Camera) {
+	model_matrix :=
+		linalg.matrix4_translate_f32(e.position) * linalg.matrix4_scale_f32(e.scale)
+	normal_matrix := linalg.transpose(linalg.inverse(model_matrix))
+
+	view, proj := view_and_projection(camera)
+
+	sg.apply_pipeline(g.entity_shader.pipeline)
+
+	vs_params := shaders.Entity_Vs_Params {
+		model         = model_matrix,
+		view          = view,
+		projection    = proj,
+		normal_matrix = normal_matrix,
+	}
+	sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
+
+	fs_params := shaders.Entity_Fs_Params {
+		view_pos  = camera.pos,
+		shininess = 32.0, // TODO: hardcoded
+	}
+	sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
+	fs_lights := lights_to_shader_uniform()
+	sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
+
+	model.draw_model(e.model)
+}
+
 setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
 	e.kind = .LightSource
-	e.model = make_cube()
+	e.model = &g.bulb_model
 	e.scale = Vec3{0.2, 0.2, 0.2}
 	e.position = pos
-	e.diffuse_texture = make_white_texture()
-	e.specular_texture = make_white_texture()
 	e.light_source_light_handle = light_handle
 
 	e.update = proc(e: ^Entity) {
 	}
 
-	e.draw = proc(e: ^Entity, camera: Camera) {
-		model_matrix :=
-			linalg.matrix4_translate_f32(e.position) * linalg.matrix4_scale_f32(e.scale)
-		normal_matrix := linalg.transpose(linalg.inverse(model_matrix))
-
-		view, proj := view_and_projection(camera)
-
-		sg.apply_pipeline(g.entity_shader.pipeline)
-		sg.apply_bindings(
-			{
-				vertex_buffers = {0 = e.model.vertices},
-				index_buffer = e.model.indices,
-				views = {
-					shaders.VIEW_entity_diffuse_texture = e.diffuse_texture.view,
-					shaders.VIEW_entity_specular_texture = e.specular_texture.view,
-				},
-				samplers = {
-					shaders.SMP_entity_diffuse_sampler = e.diffuse_texture.sampler,
-					shaders.SMP_entity_specular_sampler = e.specular_texture.sampler,
-				},
-			},
-		)
-		vs_params := shaders.Entity_Vs_Params {
-			model         = model_matrix,
-			view          = view,
-			projection    = proj,
-			normal_matrix = normal_matrix,
-		}
-		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
-
-		fs_params := shaders.Entity_Fs_Params {
-			view_pos  = camera.pos,
-			shininess = 32.0, // TODO: hardcoded
-		}
-		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
-		fs_lights := lights_to_shader_uniform()
-		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
-
-		sg.draw(0, i32(e.model.indices_count), 1)
-	}
+	e.draw = entity_draw
 }
 
 setup_container :: proc(e: ^Entity) {
 	e.kind = .Container
-
-	e.model = make_cube()
+	e.model = &g.container_model
 	e.scale = Vec3{1.0, 1.0, 1.0}
 	e.position = Vec3{0.0, 0.0, 0.0}
-	e.diffuse_texture = load_texture("res/container_diffuse.png")
-	e.specular_texture = load_texture("res/container_specular.png")
 
 	e.update = proc(e: ^Entity) {
 	}
 
-	e.draw = proc(e: ^Entity, camera: Camera) {
-		// TODO: generalize this for other entities
-		model_matrix := linalg.matrix4_translate_f32(e.position)
-		normal_matrix := linalg.transpose(linalg.inverse(model_matrix))
+	e.draw = entity_draw
+}
 
-		view, proj := view_and_projection(camera)
+setup_backpack :: proc(e: ^Entity) {
+	e.kind = .Backpack
+	e.model = &g.backpack_model
+	e.scale = Vec3{1.0, 1.0, 1.0}
+	e.position = Vec3{0.0, 0.0, -5.0}
 
-		sg.apply_pipeline(g.entity_shader.pipeline)
-		sg.apply_bindings(
-			{
-				vertex_buffers = {0 = e.model.vertices},
-				index_buffer = e.model.indices,
-				views = {
-					shaders.VIEW_entity_diffuse_texture = e.diffuse_texture.view,
-					shaders.VIEW_entity_specular_texture = e.specular_texture.view,
-				},
-				samplers = {
-					shaders.SMP_entity_diffuse_sampler = e.diffuse_texture.sampler,
-					shaders.SMP_entity_specular_sampler = e.specular_texture.sampler,
-				},
-			},
-		)
-		vs_params := shaders.Entity_Vs_Params {
-			model         = model_matrix,
-			view          = view,
-			projection    = proj,
-			normal_matrix = normal_matrix,
-		}
-		sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
-
-		fs_params := shaders.Entity_Fs_Params {
-			view_pos  = camera.pos,
-			shininess = 32.0, // TODO: hardcoded
-		}
-		sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
-		fs_lights := lights_to_shader_uniform()
-		sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
-
-		sg.draw(0, i32(e.model.indices_count), 1)
+	e.update = proc(e: ^Entity) {
 	}
+
+	e.draw = entity_draw
 }
