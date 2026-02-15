@@ -35,9 +35,9 @@ Light :: struct {
 }
 
 LightGlobals :: struct {
-	lights:               [MAX_LIGHTS]Light,
-	light_count:          int,
-	next_available_index: int,
+	lights:                     [MAX_LIGHTS]Light,
+	light_count:                int,
+	next_available_light_index: int,
 }
 
 light_to_handle :: proc(l: ^Light) -> LightHandle {
@@ -47,7 +47,7 @@ light_to_handle :: proc(l: ^Light) -> LightHandle {
 handle_to_light :: proc(lh: LightHandle) -> ^Light {
 	assert(lh.index >= 0 && lh.index < MAX_LIGHTS, "Invalid light handle index")
 
-	l := &g.light_globals.lights[lh.index]
+	l := &g.lights[lh.index]
 
 
 	if l.handle.id != lh.id {
@@ -60,15 +60,15 @@ handle_to_light :: proc(lh: LightHandle) -> ^Light {
 // TODO: add proper asserts here
 light_create :: proc() -> ^Light {
 	// TODO: also should create a free list
-	if g.light_globals.next_available_index >= MAX_LIGHTS {
+	if g.next_available_light_index >= MAX_LIGHTS {
 		panic("Max lights reached")
 	}
 
-	index := g.light_globals.next_available_index
-	g.light_globals.next_available_index += 1
-	g.light_globals.light_count += 1
+	index := g.next_available_light_index
+	g.next_available_light_index += 1
+	g.light_count += 1
 
-	return &g.light_globals.lights[index]
+	return &g.lights[index]
 }
 
 lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
@@ -82,8 +82,8 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 	cutoffs := [MAX_LIGHTS][4]f32{}
 
 
-	for i in 0 ..< g.light_globals.light_count {
-		light := g.light_globals.lights[i]
+	for i in 0 ..< g.light_count {
+		light := g.lights[i]
 		if light.kind == .nil {
 			continue
 		}
@@ -104,7 +104,7 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 	}
 
 	return shaders.Fs_Lights {
-		light_count = i32(g.light_globals.light_count),
+		light_count = i32(g.light_count),
 		kinds = kinds,
 		directions = directions,
 		positions = positions,

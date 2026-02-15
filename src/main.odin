@@ -40,7 +40,12 @@ init :: proc "c" () {
 	stime.setup()
 
 	sg.setup(
-		{environment = sglue.environment(), logger = sg.Logger(shelpers.logger(&our_context))},
+		{
+			environment      = sglue.environment(),
+			logger           = sg.Logger(shelpers.logger(&our_context)),
+			buffer_pool_size = 512, // Increased from default 128 to handle large models
+			image_pool_size  = 512, // Also increase image pool for textures
+		},
 	)
 
 	init_globals()
@@ -62,6 +67,9 @@ init :: proc "c" () {
 		setup_container(container)
 		container.position = position
 	}
+
+	backpack := entity_create()
+	setup_backpack(backpack)
 }
 
 cleanup :: proc "c" () {

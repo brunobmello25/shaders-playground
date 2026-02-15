@@ -4,19 +4,20 @@ import "./shaders"
 
 Globals :: struct {
 	//shaders
-	entity_shader:         shaders.Shader,
-	light_shader:          shaders.Shader,
+	entity_shader:        shaders.Shader,
+	light_shader:         shaders.Shader,
 
 	//camera
-	camera:                Camera,
+	camera:               Camera,
 
 	// input
-	input:                 Input,
+	input:                Input,
 
 	// entities
-	using entity_globals:  EntityGlobals,
-	using texture_globals: TextureGlobals,
-	light_globals:         LightGlobals,
+	using entity_globals: EntityGlobals,
+
+	// lights
+	using light_globals:  LightGlobals,
 }
 
 g: Globals
