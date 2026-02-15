@@ -49,6 +49,9 @@ init :: proc "c" () {
 	)
 
 	init_globals()
+
+	ch := entity_create()
+	setup_character(ch)
 }
 
 cleanup :: proc "c" () {

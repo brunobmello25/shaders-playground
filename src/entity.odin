@@ -11,6 +11,7 @@ MAX_ENTITIES :: 100
 
 EntityKind :: enum {
 	nil,
+	Character,
 }
 
 EntityHandle :: struct {
@@ -20,25 +21,32 @@ EntityHandle :: struct {
 }
 
 Entity :: struct {
-	kind:                      EntityKind,
-	handle:                    EntityHandle,
+	kind:     EntityKind,
+	handle:   EntityHandle,
 
 	// drawing
-	model:                     ^model.Model,
-	scale:                     Vec3,
-	position:                  Vec3,
+	model:    ^model.Model,
+	scale:    Vec3,
+	position: Vec3,
 
 	// procedures
-	update:                    proc(e: ^Entity),
-	draw:                      proc(e: ^Entity, camera: Camera),
-
-	// light handle for light sources
-	light_source_light_handle: LightHandle,
+	update:   proc(e: ^Entity),
+	draw:     proc(e: ^Entity, camera: Camera),
 }
 
 EntityGlobals :: struct {
 	entities:                    [MAX_ENTITIES]Entity,
 	next_available_entity_index: int,
+}
+
+setup_character :: proc(e: ^Entity) {
+	e.kind = .Character
+
+	e.model = model.load(.CharacterLowPoly) or_else panic("Failed to load character model")
+
+	e.update = proc(e: ^Entity) {}
+
+	e.draw = entity_draw
 }
 
 // TODO: add proper asserts here

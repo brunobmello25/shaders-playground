@@ -21,6 +21,7 @@ ModelKind :: enum {
 	Bulb,
 	Backpack,
 	Container,
+	CharacterLowPoly,
 }
 
 range :: proc {
@@ -334,6 +335,15 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 		// Add more kinds as needed
 	}
 
+	// Ensure every mesh has at least a diffuse and specular texture
+	has_diffuse, has_specular := false, false
+	for t in textures {
+		if t.kind == .Diffuse do has_diffuse = true
+		if t.kind == .Specular do has_specular = true
+	}
+	if !has_diffuse do append(&textures, make_white_texture_with_kind(.Diffuse))
+	if !has_specular do append(&textures, make_white_texture_with_kind(.Specular))
+
 	mesh := Mesh {
 		vertices = vertices[:],
 		indices  = indices[:],
@@ -373,6 +383,8 @@ kind_to_path :: proc(kind: ModelKind) -> string {
 		return "res/backpack/backpack.obj"
 	case .Container:
 		return "res/container/container.obj"
+	case .CharacterLowPoly:
+		return "res/character-low-poly/Character.obj"
 	}
 
 	panic("unreachable")
@@ -402,18 +414,6 @@ draw_mesh :: proc(mesh: ^Mesh) {
 				has_specular = true
 			}
 		}
-	}
-
-	// Fallback to white texture if missing
-	if !has_diffuse {
-		white := make_white_texture_with_kind(.Diffuse)
-		bindings.views[shaders.VIEW_entity_diffuse_texture] = white.view
-		bindings.samplers[shaders.SMP_entity_diffuse_sampler] = white.sampler
-	}
-	if !has_specular {
-		white := make_white_texture_with_kind(.Specular)
-		bindings.views[shaders.VIEW_entity_specular_texture] = white.view
-		bindings.samplers[shaders.SMP_entity_specular_sampler] = white.sampler
 	}
 
 	sg.apply_bindings(bindings)
