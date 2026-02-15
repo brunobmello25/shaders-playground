@@ -41,19 +41,19 @@ Entity :: struct {
 }
 
 EntityGlobals :: struct {
-	entities:             [MAX_ENTITIES]Entity,
-	next_available_index: int,
+	entities:                    [MAX_ENTITIES]Entity,
+	next_available_entity_index: int,
 }
 
 // TODO: add proper asserts here
 entity_create :: proc() -> ^Entity {
 	// TODO: also should create a free list
-	if g.entity_globals.next_available_index >= MAX_ENTITIES {
+	if g.entity_globals.next_available_entity_index >= MAX_ENTITIES {
 		panic("Max entities reached")
 	}
 
-	index := g.entity_globals.next_available_index
-	g.entity_globals.next_available_index += 1
+	index := g.entity_globals.next_available_entity_index
+	g.entity_globals.next_available_entity_index += 1
 
 	entity := &g.entity_globals.entities[index]
 

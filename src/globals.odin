@@ -15,7 +15,9 @@ Globals :: struct {
 
 	// entities
 	using entity_globals: EntityGlobals,
-	light_globals:        LightGlobals,
+
+	// lights
+	using light_globals:  LightGlobals,
 }
 
 g: Globals
