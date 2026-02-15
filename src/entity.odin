@@ -55,13 +55,15 @@ entity_create :: proc() -> ^Entity {
 	index := g.entity_globals.next_available_index
 	g.entity_globals.next_available_index += 1
 
-	handle := EntityHandle {
+	entity := &g.entity_globals.entities[index]
+
+	entity.handle = EntityHandle {
 		id    = index, // TODO: this should be a generation id
 		index = index,
 	}
+	entity.scale = Vec3{1.0, 1.0, 1.0}
+	entity.position = Vec3{0.0, 0.0, 0.0}
 
-	entity := &g.entity_globals.entities[index]
-	entity.handle = handle
 	return entity
 }
 
