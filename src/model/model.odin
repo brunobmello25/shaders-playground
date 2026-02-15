@@ -1,4 +1,4 @@
-#+feature dynamic-literals
+#+private package
 
 package model
 
@@ -76,11 +76,6 @@ Mesh :: struct {
 	textures:      []Texture,
 	vertex_buffer: sg.Buffer,
 	index_buffer:  sg.Buffer,
-}
-
-Model :: struct {
-	meshes:    []Mesh,
-	directory: string,
 }
 
 // ============================================================================
@@ -370,10 +365,6 @@ process_node :: proc(
 	}
 }
 
-// ============================================================================
-// Public API
-// ============================================================================
-
 kind_to_path :: proc(kind: ModelKind) -> string {
 	switch kind { 	// TODO: currently this file path is linux/mac only but we should make this platform agnostic using "core:path" instead
 	case .Bulb:
@@ -385,58 +376,6 @@ kind_to_path :: proc(kind: ModelKind) -> string {
 	}
 
 	panic("unreachable")
-}
-
-load :: proc(kind: ModelKind) -> (^Model, bool) {
-	filepath := kind_to_path(kind)
-
-	if cached, ok := &loaded_models[filepath]; ok {
-		return cached, true
-	}
-
-	flags :=
-		u32(assimp.aiPostProcessSteps.Triangulate) |
-		u32(assimp.aiPostProcessSteps.FlipUVs) |
-		u32(assimp.aiPostProcessSteps.GenNormals) |
-		u32(assimp.aiPostProcessSteps.CalcTangentSpace)
-
-	filepath_cstr := strings.clone_to_cstring(filepath)
-	defer delete(filepath_cstr)
-
-	scene := assimp.import_file(filepath_cstr, flags)
-	if scene == nil {
-		log.errorf("Failed to load model: %s", filepath)
-		return nil, false
-	}
-	defer assimp.release_import(scene)
-
-	// Extract directory
-	last_slash := strings.last_index(filepath, "/")
-	directory := filepath[:last_slash] if last_slash >= 0 else "."
-
-	// Process meshes
-	meshes := make([dynamic]Mesh)
-
-	// Try node hierarchy first
-	if scene.mRootNode != nil {
-		process_node(scene.mRootNode, scene, &meshes, directory)
-	}
-
-	// If no meshes from nodes, process all scene meshes directly
-	if len(meshes) == 0 && scene.mNumMeshes > 0 {
-		for i in 0 ..< scene.mNumMeshes {
-			ai_mesh := mem.ptr_offset(scene.mMeshes, int(i))^
-			mesh := process_mesh(ai_mesh, scene, directory)
-			append(&meshes, mesh)
-		}
-	}
-
-	log.infof("Loaded model: %s (%d meshes)", filepath, len(meshes))
-	loaded_models[filepath] = Model {
-		meshes    = meshes[:],
-		directory = directory,
-	}
-	return &loaded_models[filepath], true
 }
 
 draw_mesh :: proc(mesh: ^Mesh) {
@@ -479,11 +418,4 @@ draw_mesh :: proc(mesh: ^Mesh) {
 
 	sg.apply_bindings(bindings)
 	sg.draw(0, i32(len(mesh.indices)), 1)
-}
-
-// Caller must apply pipeline and set global uniforms before calling
-draw_model :: proc(m: ^Model) {
-	for &mesh in m.meshes {
-		draw_mesh(&mesh)
-	}
 }

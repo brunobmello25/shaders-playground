@@ -89,7 +89,7 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 	fs_lights := lights_to_shader_uniform()
 	sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
-	model.draw_model(e.model)
+	model.draw(e.model)
 }
 
 setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
