@@ -5,7 +5,6 @@ import "./shaders"
 Globals :: struct {
 	//shaders
 	entity_shader:        shaders.Shader,
-	light_shader:         shaders.Shader,
 
 	//camera
 	camera:               Camera,

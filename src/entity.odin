@@ -1,6 +1,5 @@
 package main
 
-import "core:log"
 import "core:math/linalg"
 
 import sg "vendor/sokol/sokol/gfx"
@@ -12,9 +11,6 @@ MAX_ENTITIES :: 100
 
 EntityKind :: enum {
 	nil,
-	Container,
-	LightSource,
-	Backpack,
 }
 
 EntityHandle :: struct {
@@ -92,47 +88,4 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 	sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
 	model.draw(e.model)
-}
-
-setup_light_source :: proc(e: ^Entity, pos: Vec3, light_handle: LightHandle) {
-	e.kind = .LightSource
-	bulb_model, ok := model.load(.Bulb)
-	if !ok {log.panic("Failed to load bulb model")}
-	e.model = bulb_model
-	e.scale = Vec3{0.2, 0.2, 0.2}
-	e.position = pos
-	e.light_source_light_handle = light_handle
-
-	e.update = proc(e: ^Entity) {
-	}
-
-	e.draw = entity_draw
-}
-
-setup_container :: proc(e: ^Entity) {
-	e.kind = .Container
-	container_model, ok := model.load(.Container)
-	if !ok {log.panic("Failed to load container model")}
-	e.model = container_model
-	e.scale = Vec3{1.0, 1.0, 1.0}
-	e.position = Vec3{0.0, 0.0, 0.0}
-
-	e.update = proc(e: ^Entity) {
-	}
-
-	e.draw = entity_draw
-}
-
-setup_backpack :: proc(e: ^Entity) {
-	e.kind = .Backpack
-	backpack_model, ok := model.load(.Backpack)
-	if !ok {log.panic("Failed to load backpack model")}
-	e.model = backpack_model
-	e.scale = Vec3{1.0, 1.0, 1.0}
-	e.position = Vec3{0.0, 0.0, -5.0}
-
-	e.update = proc(e: ^Entity) {
-	}
-
-	e.draw = entity_draw
 }

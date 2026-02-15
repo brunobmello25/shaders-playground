@@ -25,7 +25,7 @@ fi
 
 if [ "$BUILD_GAME" = "true" ]; then
 	pushd ./target
-	# odin build ../src -out=./game -vet-packages:main -vet-unused-procedures -debug -error-pos-style:unix
+	# odin build ../src -out=./game -vet-packages:main,model -vet-unused -vet-unused-imports -vet-unused-procedures -vet-unused-variables -vet-using-param -vet-using-stmt -debug -error-pos-style:unix
 	odin build ../src -out=./game -debug -error-pos-style:unix
 	popd
 fi

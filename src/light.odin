@@ -125,21 +125,6 @@ setup_world_lights :: proc() {
 		diffuse = Vec3{0.5, 0.5, 0.5},
 		specular = Vec3{1.0, 1.0, 1.0},
 	)
-
-	point_light := light_create()
-	setup_point_light(
-		point_light,
-		position = Vec3{1.0, 6.0, -15.0},
-		ambient = Vec3{0.2, 0.2, 0.2},
-		diffuse = Vec3{0.5, 0.5, 0.5},
-		specular = Vec3{1.0, 1.0, 1.0}, // TODO: check if this light is right. i can't see the specular reflections
-		constant_attenuation = 1.0,
-		linear_attenuation = 0.09,
-		quadratic_attenuation = 0.032,
-	)
-
-	light_source := entity_create()
-	setup_light_source(light_source, point_light.position, light_to_handle(point_light))
 }
 
 setup_spotlight :: proc(
