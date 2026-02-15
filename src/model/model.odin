@@ -362,7 +362,7 @@ process_node :: proc(
 ) {
 	// Process all meshes in this node
 	for i in 0 ..< node.mNumMeshes {
-		mesh_index := mem.ptr_offset(node.mMeshes, i)^
+		mesh_index := mem.ptr_offset(node.mMeshes, int(i))^
 		ai_mesh := mem.ptr_offset(scene.mMeshes, int(mesh_index))^
 		mesh := process_mesh(ai_mesh, scene, directory)
 		append(meshes, mesh)
@@ -384,7 +384,7 @@ kind_to_path :: proc(kind: ModelKind) -> string {
 	case .Container:
 		return "res/container/container.obj"
 	case .CharacterLowPoly:
-		return "res/character-low-poly/Character.obj"
+		return "res/character-low-poly/Character.glb"
 	}
 
 	panic("unreachable")
