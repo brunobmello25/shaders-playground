@@ -42,7 +42,7 @@ EntityGlobals :: struct {
 setup_character :: proc(e: ^Entity) {
 	e.kind = .Character
 
-	e.model = model.load(.CharacterLowPoly) or_else panic("Failed to load character model")
+	e.model = model.load(.CharacterLowPoly) or_else panic("Failed to load character model") // TODO: handle model not loading someday?
 
 	e.update = proc(e: ^Entity) {}
 

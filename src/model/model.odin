@@ -84,6 +84,7 @@ Mesh :: struct {
 // Mesh Setup
 // ============================================================================
 
+// Setup mesh prepares sokol specific stuff, like the vertex_buffer and the index_buffer for a given mesh
 setup_mesh :: proc(mesh: ^Mesh) {
 	// Convert Vertex slice to interleaved float array
 	// Layout: position(3) + normal(3) + texcoord(2) = 8 floats per vertex

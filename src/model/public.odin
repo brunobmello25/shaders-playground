@@ -35,7 +35,7 @@ load :: proc(kind: ModelKind) -> (^Model, bool) {
 	defer assimp.release_import(scene)
 
 	// Extract directory
-	last_slash := strings.last_index(filepath, "/")
+	last_slash := strings.last_index(filepath, "/") // TODO: should also consider windows here. maybe make kind_to_path return filepath struct and only get os path when needed?
 	directory := filepath[:last_slash] if last_slash >= 0 else "."
 
 	// Process meshes
