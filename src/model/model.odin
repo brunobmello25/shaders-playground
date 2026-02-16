@@ -6,6 +6,7 @@ import "core:c"
 import "core:fmt"
 import "core:log"
 import "core:mem"
+import "core:path/filepath"
 import "core:strings"
 
 import stbi "vendor:stb/image"
@@ -376,18 +377,20 @@ process_node :: proc(
 }
 
 kind_to_path :: proc(kind: ModelKind) -> string {
-	switch kind { 	// TODO: currently this file path is linux/mac only but we should make this platform agnostic using "core:path" instead
+	path: string
+	switch kind {
 	case .Bulb:
-		return "res/bulb/bulb.obj"
+		path = ("res/bulb/bulb.obj")
 	case .Backpack:
-		return "res/backpack/backpack.obj"
+		path = ("res/backpack/backpack.obj")
 	case .Container:
-		return "res/container/container.obj"
+		path = ("res/container/container.obj")
 	case .CharacterLowPoly:
-		return "res/character-low-poly/Character.glb"
+		path = ("res/character-low-poly/Character.gltf")
 	}
 
-	panic("unreachable")
+	path, _ = filepath.from_slash(path) // TEST: test that this really works on windows even though im passing slash here
+	return path
 }
 
 draw_mesh :: proc(mesh: ^Mesh) {
