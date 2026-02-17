@@ -17,6 +17,7 @@ import sg "../vendor/sokol/sokol/gfx"
 
 Vec3 :: [3]f32
 Vec2 :: [2]f32
+Mat4 :: matrix[4, 4]f32
 
 ModelKind :: enum {
 	Bulb,
@@ -45,6 +46,17 @@ loaded_models: map[string]Model
 // ============================================================================
 // Types
 // ============================================================================
+
+BoneWeight :: struct {
+	vertex_id: int,
+	weight:    f32,
+}
+
+Bone :: struct {
+	name:          string,
+	offset_matrix: Mat4,
+	weights:       []BoneWeight,
+}
 
 Vertex :: struct {
 	position:   Vec3,
@@ -291,6 +303,7 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 	vertices := make([dynamic]Vertex, 0, ai_mesh.mNumVertices)
 	indices := make([dynamic]u32)
 	textures := make([dynamic]Texture)
+	bones := make([dynamic]Bone)
 
 	// Extract vertices
 	for i in 0 ..< ai_mesh.mNumVertices {
@@ -318,6 +331,36 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 		}
 
 		append(&vertices, vertex)
+	}
+
+	// extract bones
+	for i in 0 ..< ai_mesh.mNumBones {
+		bone := Bone{}
+		aibone := mem.ptr_offset(ai_mesh.mBones, int(i))
+
+		bone.name = aistring_to_string(&aibone^.mName)
+
+		// TODO: check that this offset matrix is in the format we expect.
+			// odinfmt: disable
+		m := aibone^.mOffsetMatrix
+		bone.offset_matrix = Mat4{
+			m.a1, m.a2, m.a3, m.a4,
+			m.b1, m.b2, m.b3, m.b4,
+			m.c1, m.c2, m.c3, m.c4,
+			m.d1, m.d2, m.d3, m.d4,
+		}
+		// odinfmt: enable
+
+		bone.weights = make([]BoneWeight, aibone^.mNumWeights)
+		for j in 0 ..< aibone^.mNumWeights {
+			aiweight := mem.ptr_offset(aibone^.mWeights, int(j))
+			bone.weights[j] = BoneWeight {
+				vertex_id = int(aiweight^.mVertexId),
+				weight    = aiweight^.mWeight,
+			}
+		}
+
+		append(&bones, bone)
 	}
 
 	// Extract indices
