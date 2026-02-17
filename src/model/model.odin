@@ -352,11 +352,13 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 		// odinfmt: enable
 
 		bone.weights = make([]BoneWeight, aibone^.mNumWeights)
-		for j in 0 ..< aibone^.mNumWeights {
-			aiweight := mem.ptr_offset(aibone^.mWeights, int(j))
-			bone.weights[j] = BoneWeight {
-				vertex_id = int(aiweight^.mVertexId),
-				weight    = aiweight^.mWeight,
+		if aibone^.mWeights != nil {
+			for j in 0 ..< aibone^.mNumWeights {
+				aiweight := mem.ptr_offset(aibone^.mWeights, int(j))
+				bone.weights[j] = BoneWeight {
+					vertex_id = int(aiweight^.mVertexId),
+					weight    = aiweight^.mWeight,
+				}
 			}
 		}
 
