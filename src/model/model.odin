@@ -88,6 +88,7 @@ Mesh :: struct {
 	vertices:      []Vertex,
 	indices:       []u32,
 	textures:      []Texture,
+	bones:         []Bone,
 	vertex_buffer: sg.Buffer,
 	index_buffer:  sg.Buffer,
 }
@@ -395,6 +396,7 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 		vertices = vertices[:],
 		indices  = indices[:],
 		textures = textures[:],
+		bones    = bones[:],
 	}
 
 	setup_mesh(&mesh)
