@@ -33,9 +33,7 @@ main :: proc() {
 init :: proc "c" () {
 	context = our_context
 
-	sapp.lock_mouse(true)
-	sapp.show_mouse(false)
-	g.input.is_mouse_locked = true
+	set_mouse_lock(false)
 
 	stime.setup()
 

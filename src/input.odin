@@ -15,11 +15,15 @@ Input :: struct {
 	},
 }
 
+set_mouse_lock :: proc(lock: bool) {
+	sapp.lock_mouse(lock)
+	sapp.show_mouse(!lock)
+	g.input.is_mouse_locked = lock
+}
+
 toggle_mouse_lock :: proc(input: ^Input) {
 	if was_mouse_button_just_pressed(input^, .RIGHT) {
-		input.is_mouse_locked = !input.is_mouse_locked
-		sapp.lock_mouse(input.is_mouse_locked)
-		sapp.show_mouse(!input.is_mouse_locked)
+		set_mouse_lock(!input.is_mouse_locked)
 	}
 }
 
