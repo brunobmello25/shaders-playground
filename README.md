@@ -12,4 +12,5 @@ A simple project I'm using to experiment with shaders using [Odin](https://odin-
 
 ## TODO
 
+- [ ] revisit allocations made with `make(...)` - can i avoid these heap allocations somehow?
 - [ ] exercises of [this lesson](https://learnopengl.com/Lighting/Lighting-maps)
