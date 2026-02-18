@@ -21,6 +21,9 @@ Globals :: struct {
 
 	// lights
 	using light_globals:  LightGlobals,
+
+	// floor
+	floor:                FloorGlobals,
 }
 
 g: Globals
@@ -31,4 +34,6 @@ init_globals :: proc() {
 	g.camera = make_camera()
 
 	setup_world_lights()
+
+	init_floor()
 }

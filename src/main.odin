@@ -73,6 +73,8 @@ frame :: proc "c" () {
 
 	update_camera(&g.camera, &g.input)
 
+	draw_floor()
+
 	for &e in g.entities {
 		if e.kind == .nil {
 			continue
