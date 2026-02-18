@@ -22,7 +22,8 @@ load :: proc(kind: ModelKind) -> (^Model, bool) {
 		u32(assimp.aiPostProcessSteps.Triangulate) |
 		u32(assimp.aiPostProcessSteps.FlipUVs) |
 		u32(assimp.aiPostProcessSteps.GenNormals) |
-		u32(assimp.aiPostProcessSteps.CalcTangentSpace)
+		u32(assimp.aiPostProcessSteps.CalcTangentSpace) |
+		u32(assimp.aiPostProcessSteps.LimitBoneWeights)
 
 	filepath_cstr := strings.clone_to_cstring(filepath)
 	defer delete(filepath_cstr)

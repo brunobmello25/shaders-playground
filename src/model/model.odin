@@ -15,6 +15,8 @@ import shaders "../shaders"
 import assimp "../vendor/assimp"
 import sg "../vendor/sokol/sokol/gfx"
 
+MAX_BONES_PER_VERTEX :: 4
+
 Vec3 :: [3]f32
 Vec2 :: [2]f32
 Mat4 :: matrix[4, 4]f32
@@ -58,6 +60,16 @@ Bone :: struct {
 	weights:       []BoneWeight,
 }
 
+BoneInfluence :: struct {
+	bone_index: int,
+	weight:     f32,
+}
+
+VertexBoneData :: struct {
+	influences: [MAX_BONES_PER_VERTEX]BoneInfluence,
+	count:      int,
+}
+
 Vertex :: struct {
 	position:   Vec3,
 	normal:     Vec3,
@@ -85,12 +97,13 @@ Texture :: struct {
 }
 
 Mesh :: struct {
-	vertices:      []Vertex,
-	indices:       []u32,
-	textures:      []Texture,
-	bones:         []Bone,
-	vertex_buffer: sg.Buffer,
-	index_buffer:  sg.Buffer,
+	vertices:         []Vertex,
+	indices:          []u32,
+	textures:         []Texture,
+	bones:            []Bone,
+	vertex_bone_data: map[int]VertexBoneData,
+	vertex_buffer:    sg.Buffer,
+	index_buffer:     sg.Buffer,
 }
 
 // ============================================================================
@@ -366,6 +379,28 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 		append(&bones, bone)
 	}
 
+	// Build vertex -> bone influences map
+	vertex_bone_data := make(map[int]VertexBoneData)
+	for bone_idx in 0 ..< len(bones) {
+		for bw in bones[bone_idx].weights {
+			data := vertex_bone_data[bw.vertex_id] or_else VertexBoneData{}
+
+			fmt.assertf(
+				data.count < MAX_BONES_PER_VERTEX,
+				"Too many bone influences for vertex. Please increase MAX_BONES_PER_VERTEX or clean up your model. Vertex %d has %d influences",
+				bw.vertex_id,
+				data.count,
+			)
+
+			data.influences[data.count] = BoneInfluence {
+				bone_index = bone_idx,
+				weight     = bw.weight,
+			}
+			data.count += 1
+			vertex_bone_data[bw.vertex_id] = data
+		}
+	}
+
 	// Extract indices
 	for i in 0 ..< ai_mesh.mNumFaces {
 		face := mem.ptr_offset(ai_mesh.mFaces, int(i))
@@ -393,10 +428,11 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 	if !has_specular do append(&textures, make_white_texture_with_kind(.Specular))
 
 	mesh := Mesh {
-		vertices = vertices[:],
-		indices  = indices[:],
-		textures = textures[:],
-		bones    = bones[:],
+		vertices         = vertices[:],
+		indices          = indices[:],
+		textures         = textures[:],
+		bones            = bones[:],
+		vertex_bone_data = vertex_bone_data,
 	}
 
 	setup_mesh(&mesh)
