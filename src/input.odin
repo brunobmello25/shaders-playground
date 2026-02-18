@@ -35,6 +35,10 @@ is_action_down :: proc(input: Input, action: sapp.Keycode) -> bool {
 	return input.input_map[action].is_down
 }
 
+was_action_just_pressed :: proc(input: Input, action: sapp.Keycode) -> bool {
+	return input.input_map[action].is_down && !input.input_map[action].was_down
+}
+
 update_mouse_delta :: proc(event: ^sapp.Event, input: ^Input) {
 	if event.type == .MOUSE_MOVE {
 		input.mouse_delta.x += f32(event.mouse_dx)

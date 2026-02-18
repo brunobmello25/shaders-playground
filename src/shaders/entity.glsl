@@ -5,9 +5,13 @@
 
 @vs vs
 
+#define MAX_BONES_PER_MESH 100
+
 in vec3 a_pos;
 in vec3 a_normal;
 in vec2 a_uv;
+in vec4 bone_ids;
+in vec4 bone_weights;
 
 out vec3 normal;
 out vec3 frag_world_pos;
@@ -20,10 +24,23 @@ layout (binding=0) uniform Entity_VS_Params {
 	mat4 normal_matrix;
 };
 
+layout(binding=1) uniform Entity_VS_Bone_Transforms {
+	mat4 bone_transforms[MAX_BONES_PER_MESH];
+};
+
 void main () {
-	gl_Position = projection * view * model * vec4(a_pos, 1.0);
-	frag_world_pos = vec3(model * vec4(a_pos, 1.0));
-	normal = mat3(normal_matrix) * a_normal;
+	vec4 skinned_pos = vec4(0.0);
+	vec4 skinned_normal = vec4(0.0);
+	for (int i = 0; i < 4; i++) {
+		int bone_id = int(bone_ids[i]);
+		float weight = bone_weights[i];
+		skinned_pos += weight * (bone_transforms[bone_id] * vec4(a_pos, 1.0));
+		skinned_normal += weight * (bone_transforms[bone_id] * vec4(a_normal, 0.0));
+	}
+
+	gl_Position = projection * view * model * skinned_pos;
+	frag_world_pos = vec3(model * skinned_pos);
+	normal = mat3(normal_matrix) * vec3(skinned_normal);
 	uv = a_uv;
 }
 
@@ -37,7 +54,7 @@ in vec2 uv;
 
 out vec4 frag_color;
 
-layout (binding=1) uniform Entity_FS_Params {
+layout (binding=2) uniform Entity_FS_Params {
 	vec3 view_pos;
 	float shininess;
 };
@@ -53,7 +70,7 @@ layout (binding=1) uniform sampler entity_specular_sampler;
 #define LIGHT_POINT 2
 #define LIGHT_SPOT 3
 
-layout (std140, binding=2) uniform FS_Lights {
+layout (std140, binding=3) uniform FS_Lights {
 	int light_count;
 	ivec4 kinds[MAX_LIGHTS];
 	vec4 directions[MAX_LIGHTS];

@@ -3,6 +3,10 @@ package main
 import "./shaders"
 
 Globals :: struct {
+	// timing
+	dt:                   f32,
+	last_time:            u64,
+
 	//shaders
 	entity_shader:        shaders.Shader,
 
