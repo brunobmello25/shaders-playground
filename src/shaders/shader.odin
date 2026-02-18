@@ -24,6 +24,8 @@ load :: proc(kind: ShaderKind) -> Shader {
 				ATTR_entity_a_pos = {format = .FLOAT3},
 				ATTR_entity_a_normal = {format = .FLOAT3},
 				ATTR_entity_a_uv = {format = .FLOAT2},
+				ATTR_entity_bone_ids = {format = .FLOAT4},
+				ATTR_entity_bone_weights = {format = .FLOAT4},
 			},
 		}
 	}

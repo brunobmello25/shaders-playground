@@ -8,6 +8,8 @@
 in vec3 a_pos;
 in vec3 a_normal;
 in vec2 a_uv;
+in vec4 bone_ids;
+in vec4 bone_weights;
 
 out vec3 normal;
 out vec3 frag_world_pos;

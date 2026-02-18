@@ -113,12 +113,13 @@ Mesh :: struct {
 // Setup mesh prepares sokol specific stuff, like the vertex_buffer and the index_buffer for a given mesh
 setup_mesh :: proc(mesh: ^Mesh) {
 	// Convert Vertex slice to interleaved float array
-	// Layout: position(3) + normal(3) + texcoord(2) = 8 floats per vertex
-	vertices_flat := make([]f32, len(mesh.vertices) * 8)
+	// Layout: position(3) + normal(3) + texcoord(2) + bone indices(4) + bone weights(4) = 16 floats per vertex
+	base := 16
+	vertices_flat := make([]f32, len(mesh.vertices) * base)
 	defer delete(vertices_flat)
 
 	for v, i in mesh.vertices {
-		offset := i * 8
+		offset := i * base
 		vertices_flat[offset + 0] = v.position.x
 		vertices_flat[offset + 1] = v.position.y
 		vertices_flat[offset + 2] = v.position.z
@@ -127,6 +128,13 @@ setup_mesh :: proc(mesh: ^Mesh) {
 		vertices_flat[offset + 5] = v.normal.z
 		vertices_flat[offset + 6] = v.tex_coords.x
 		vertices_flat[offset + 7] = v.tex_coords.y
+
+		for j in 0 ..< mesh.vertex_bone_data[i].count {
+			influence := mesh.vertex_bone_data[i].influences[j]
+
+			vertices_flat[offset + 8 + j] = f32(influence.bone_index)
+			vertices_flat[offset + 8 + MAX_BONES_PER_VERTEX + j] = influence.weight
+		}
 	}
 
 	// Create vertex buffer
