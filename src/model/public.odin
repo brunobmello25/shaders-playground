@@ -1,14 +1,18 @@
 package model
 
 import "core:log"
+import "core:math/linalg"
 import "core:mem"
 import "core:strings"
 
 import assimp "../vendor/assimp"
 
 Model :: struct {
-	meshes:    []Mesh,
-	directory: string,
+	meshes:         []Mesh,
+	directory:      string,
+	root_node:      Node,
+	global_inverse: Mat4,
+	animations:     []Animation,
 }
 
 load :: proc(kind: ModelKind) -> (^Model, bool) {
@@ -56,17 +60,40 @@ load :: proc(kind: ModelKind) -> (^Model, bool) {
 		}
 	}
 
-	log.infof("Loaded model: %s (%d meshes)", filepath, len(meshes))
+	root_node := extract_node(scene.mRootNode)
+	global_inverse := linalg.inverse(root_node.transform) // TODO: what is this?
+
+	animations := make([]Animation, scene.mNumAnimations)
+	for i in 0 ..< scene.mNumAnimations {
+		ai_anim := mem.ptr_offset(scene.mAnimations, int(i))^
+		animations[i] = extract_animation(ai_anim)
+	}
+
+	log.debugf(
+		"Loaded model: %s (%d meshes, %d animations)",
+		filepath,
+		len(meshes),
+		len(animations),
+	)
 	loaded_models[filepath] = Model {
-		meshes    = meshes[:],
-		directory = directory,
+		meshes         = meshes[:],
+		directory      = directory,
+		root_node      = root_node,
+		global_inverse = global_inverse,
+		animations     = animations,
 	}
 	return &loaded_models[filepath], true
 }
 
 // Caller must apply pipeline and set global uniforms before calling
-draw :: proc(m: ^Model) {
+draw :: proc(m: ^Model, anim_idx: int, time_secs: f64) {
 	for &mesh in m.meshes {
-		draw_mesh(&mesh)
+		bone_transforms: [MAX_BONES_PER_MESH]Mat4
+		if anim_idx >= 0 && anim_idx < len(m.animations) {
+			bone_transforms = compute_bone_transforms(m, &mesh, &m.animations[anim_idx], time_secs)
+		} else {
+			for &bt in bone_transforms do bt = linalg.identity(Mat4)
+		}
+		draw_mesh(&mesh, bone_transforms)
 	}
 }

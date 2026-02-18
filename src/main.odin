@@ -69,6 +69,8 @@ frame :: proc "c" () {
 		},
 	)
 
+	g.dt = f32(stime.sec(stime.laptime(&g.last_time)))
+
 	update_camera(&g.camera, &g.input)
 
 	for &e in g.entities {

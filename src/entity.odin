@@ -25,9 +25,11 @@ Entity :: struct {
 	handle:   EntityHandle,
 
 	// drawing
-	model:    ^model.Model,
-	scale:    Vec3,
-	position: Vec3,
+	model:          ^model.Model,
+	scale:          Vec3,
+	position:       Vec3,
+	animation_idx:  int,
+	animation_time: f64,
 
 	// procedures
 	update:   proc(e: ^Entity),
@@ -44,7 +46,10 @@ setup_character :: proc(e: ^Entity) {
 
 	e.model = model.load(.CharacterLowPoly) or_else panic("Failed to load character model") // TODO: handle model not loading someday?
 
-	e.update = proc(e: ^Entity) {}
+	e.animation_idx = 0
+	e.update = proc(e: ^Entity) {
+		e.animation_time += f64(g.dt)
+	}
 
 	e.draw = entity_draw
 }
@@ -67,6 +72,7 @@ entity_create :: proc() -> ^Entity {
 	}
 	entity.scale = Vec3{1.0, 1.0, 1.0}
 	entity.position = Vec3{0.0, 0.0, 0.0}
+	entity.animation_idx = -1
 
 	return entity
 }
@@ -95,5 +101,5 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 	fs_lights := lights_to_shader_uniform()
 	sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
-	model.draw(e.model)
+	model.draw(e.model, e.animation_idx, e.animation_time)
 }
