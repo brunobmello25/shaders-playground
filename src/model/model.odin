@@ -5,6 +5,7 @@ package model
 import "core:c"
 import "core:fmt"
 import "core:log"
+import "core:math/linalg"
 import "core:mem"
 import "core:path/filepath"
 import "core:strings"
@@ -16,6 +17,7 @@ import assimp "../vendor/assimp"
 import sg "../vendor/sokol/sokol/gfx"
 
 MAX_BONES_PER_VERTEX :: 4
+MAX_BONES_PER_MESH :: 100
 
 Vec3 :: [3]f32
 Vec2 :: [2]f32
@@ -28,6 +30,7 @@ ModelKind :: enum {
 	CharacterLowPoly,
 }
 
+// TODO: this is duplicated from helpers. maybe move this to a package
 range :: proc {
 	range_from_slice,
 	range_from_struct,
@@ -512,5 +515,16 @@ draw_mesh :: proc(mesh: ^Mesh) {
 	}
 
 	sg.apply_bindings(bindings)
+
+	bone_transforms := [MAX_BONES_PER_MESH]Mat4{}
+	for i in 0 ..< len(bone_transforms) {
+		bone_transforms[i] = linalg.identity(Mat4)
+	}
+
+	bone_uniforms := shaders.Entity_Vs_Bone_Transforms {
+		bone_transforms = bone_transforms,
+	}
+	sg.apply_uniforms(shaders.UB_Entity_VS_Bone_Transforms, range(&bone_uniforms))
+
 	sg.draw(0, i32(len(mesh.indices)), 1)
 }
