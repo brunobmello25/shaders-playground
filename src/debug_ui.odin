@@ -90,7 +90,6 @@ render_debug_ui :: proc() {
 	}
 }
 
-
 toggle_debug_menu :: proc(input: Input) {
 	if was_action_just_pressed(input, .GRAVE_ACCENT) {
 		log.debug("Toggling debug menu")

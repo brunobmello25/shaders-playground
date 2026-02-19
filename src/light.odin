@@ -11,9 +11,6 @@ LightKind :: enum {
 	Spot,
 }
 
-// TODO: make this unmutable somehow?
-zero_light: Light = {}
-
 LightHandle :: struct {
 	id:    int,
 	index: int,
@@ -34,8 +31,11 @@ Light :: struct {
 	outer_cutoff:          f32,
 }
 
-lights:                     [MAX_LIGHTS]Light
-light_count:                int
+// TODO: make this unmutable somehow?
+zero_light: Light = {}
+
+lights: [MAX_LIGHTS]Light
+light_count: int
 next_available_light_index: int
 
 light_to_handle :: proc(l: ^Light) -> LightHandle {
