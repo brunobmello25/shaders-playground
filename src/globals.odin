@@ -2,15 +2,14 @@ package main
 
 Globals :: struct {
 	// timing
-	dt:                   f32,
-	last_time:            u64,
+	dt:        f32,
+	last_time: u64,
 
 	//camera
-	camera:               Camera,
+	camera:    Camera,
 
 	// input
-	input:                Input,
-
+	input:     Input,
 }
 
 g: Globals

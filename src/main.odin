@@ -4,7 +4,6 @@ package main
 import "base:runtime"
 import "core:log"
 
-import "./gs"
 import "./shaders"
 import "./ui"
 
@@ -128,6 +127,5 @@ event :: proc "c" (event: ^sapp.Event) {
 }
 
 init_game_state :: proc() {
-	gs.init()
-	gs.get().floor = init_floor()
+	init_floor()
 }

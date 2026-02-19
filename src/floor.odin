@@ -2,7 +2,6 @@ package main
 
 import "core:math/linalg"
 
-import "gs"
 import sg "vendor/sokol/sokol/gfx"
 
 import model "model"
@@ -11,8 +10,10 @@ import shaders "shaders"
 FLOOR_Y :: 0.0
 FLOOR_SIZE :: 100.0
 
-init_floor :: proc() -> ^model.Model {
-	return model.make_plane(FLOOR_SIZE, diffuse = {12, 35, 48, 255})
+floor_model: ^model.Model
+
+init_floor :: proc() {
+	floor_model = model.make_plane(FLOOR_SIZE, diffuse = {12, 35, 48, 255})
 }
 
 draw_floor :: proc() {
@@ -37,5 +38,5 @@ draw_floor :: proc() {
 	fs_lights := lights_to_shader_uniform()
 	sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
 
-	model.draw(gs.get().floor, -1, 0)
+	model.draw(floor_model, -1, 0)
 }
