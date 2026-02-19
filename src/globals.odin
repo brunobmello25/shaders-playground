@@ -11,8 +11,6 @@ Globals :: struct {
 	// input
 	input:                Input,
 
-	// lights
-	using light_globals:  LightGlobals,
 }
 
 g: Globals
