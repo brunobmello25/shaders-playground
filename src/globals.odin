@@ -11,9 +11,6 @@ Globals :: struct {
 	// input
 	input:                Input,
 
-	// entities
-	using entity_globals: EntityGlobals,
-
 	// lights
 	using light_globals:  LightGlobals,
 }

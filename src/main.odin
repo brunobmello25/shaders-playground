@@ -100,7 +100,7 @@ frame :: proc "c" () {
 
 	draw_floor()
 
-	for &e in g.entities {
+	for &e in entities {
 		if e.kind == .nil {
 			continue
 		}

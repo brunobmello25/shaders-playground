@@ -37,10 +37,8 @@ Entity :: struct {
 	draw:           proc(e: ^Entity, camera: Camera),
 }
 
-EntityGlobals :: struct {
-	entities:                    [MAX_ENTITIES]Entity,
-	next_available_entity_index: int,
-}
+entities:                    [MAX_ENTITIES]Entity
+next_available_entity_index: int
 
 setup_character :: proc(e: ^Entity) {
 	e.kind = .Character
@@ -70,14 +68,14 @@ setup_character :: proc(e: ^Entity) {
 // TODO: add proper asserts here
 entity_create :: proc() -> ^Entity {
 	// TODO: also should create a free list
-	if g.entity_globals.next_available_entity_index >= MAX_ENTITIES {
+	if next_available_entity_index >= MAX_ENTITIES {
 		panic("Max entities reached")
 	}
 
-	index := g.entity_globals.next_available_entity_index
-	g.entity_globals.next_available_entity_index += 1
+	index := next_available_entity_index
+	next_available_entity_index += 1
 
-	entity := &g.entity_globals.entities[index]
+	entity := &entities[index]
 
 	entity.handle = EntityHandle {
 		id    = index, // TODO: this should be a generation id
