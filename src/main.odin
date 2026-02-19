@@ -4,6 +4,8 @@ package main
 import "base:runtime"
 import "core:log"
 
+import "./gs"
+
 import sapp "vendor/sokol/sokol/app"
 import sg "vendor/sokol/sokol/gfx"
 import sglue "vendor/sokol/sokol/glue"
@@ -33,8 +35,6 @@ main :: proc() {
 init :: proc "c" () {
 	context = our_context
 
-	set_mouse_lock(false)
-
 	stime.setup()
 
 	sg.setup(
@@ -46,7 +46,11 @@ init :: proc "c" () {
 		},
 	)
 
+	set_mouse_lock(false)
+
 	init_globals()
+
+	init_game_state()
 
 	ch := entity_create()
 	setup_character(ch)
@@ -95,4 +99,9 @@ event :: proc "c" (event: ^sapp.Event) {
 	update_input_maps(event, &g.input)
 	update_mouse_delta(event, &g.input)
 	toggle_mouse_lock(&g.input)
+}
+
+init_game_state :: proc() {
+	gs.init()
+	gs.get().floor = init_floor()
 }
