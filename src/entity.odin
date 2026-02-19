@@ -47,12 +47,12 @@ setup_character :: proc(e: ^Entity) {
 
 	e.animation_idx = 0
 	e.update = proc(e: ^Entity) {
-		if was_action_just_pressed(g.input, .RIGHT) {
+		if was_action_just_pressed(input, .RIGHT) {
 			e.animation_idx = (e.animation_idx + 1) % len(e.model.animations)
 			e.animation_time = 0.0
 			log.debugf("Switched to animation index %d", e.animation_idx)
 		}
-		if was_action_just_pressed(g.input, .LEFT) {
+		if was_action_just_pressed(input, .LEFT) {
 			e.animation_idx =
 				(e.animation_idx - 1 + len(e.model.animations)) % len(e.model.animations)
 			e.animation_time = 0.0

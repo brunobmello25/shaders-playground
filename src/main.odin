@@ -52,7 +52,8 @@ init :: proc "c" () {
 	shaders.init()
 	ui.init()
 
-	init_globals()
+	init_camera()
+	setup_world_lights()
 
 	init_game_state()
 
@@ -71,10 +72,10 @@ frame :: proc "c" () {
 	// ==================== UPDATE ====================
 	g.dt = f32(stime.sec(stime.laptime(&g.last_time)))
 
-	toggle_debug_menu(g.input)
-	toggle_mouse_lock(&g.input)
+	toggle_debug_menu(input)
+	toggle_mouse_lock(&input)
 
-	update_camera(&g.camera, &g.input)
+	update_camera(&camera, &input)
 	// ===================== DRAW =====================
 
 	sg.begin_pass(
@@ -105,7 +106,7 @@ frame :: proc "c" () {
 		}
 
 		e.update(&e) // TODO: should update entities above together with the other updates
-		e.draw(&e, g.camera)
+		e.draw(&e, camera)
 	}
 
 	// Render UI on top of 3D (inside the same pass)
@@ -114,7 +115,7 @@ frame :: proc "c" () {
 	sg.end_pass()
 	sg.commit()
 
-	update_key_states(&g.input)
+	update_key_states(&input)
 }
 
 event :: proc "c" (event: ^sapp.Event) {
@@ -122,8 +123,8 @@ event :: proc "c" (event: ^sapp.Event) {
 
 	ui.handle_event(event)
 
-	update_input_maps(event, &g.input)
-	update_mouse_delta(event, &g.input)
+	update_input_maps(event, &input)
+	update_mouse_delta(event, &input)
 }
 
 init_game_state :: proc() {

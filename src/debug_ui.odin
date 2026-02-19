@@ -35,12 +35,12 @@ draw_info_menu :: proc() {
 
 	// Camera Pos and target
 	{
-		pos := g.camera.pos
+		pos := camera.pos
 		mu.label(
 			mu_ctx,
 			fmt.bprintf(buf[:], "camera pos: (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z),
 		)
-		target := g.camera.front
+		target := camera.front
 		mu.label(
 			mu_ctx,
 			fmt.bprintf(buf[:], "camera front: (%.2f, %.2f, %.2f)", target.x, target.y, target.z),

@@ -17,7 +17,7 @@ init_floor :: proc() {
 }
 
 draw_floor :: proc() {
-	view, proj := view_and_projection(g.camera)
+	view, proj := view_and_projection(camera)
 
 	sg.apply_pipeline(shaders.get(.Entity).pipeline)
 
@@ -30,7 +30,7 @@ draw_floor :: proc() {
 	sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
 
 	fs_params := shaders.Entity_Fs_Params {
-		view_pos  = g.camera.pos,
+		view_pos  = camera.pos,
 		shininess = 32.0,
 	}
 	sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))

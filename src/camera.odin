@@ -6,6 +6,8 @@ import "core:math/linalg"
 
 import sapp "vendor/sokol/sokol/app"
 
+camera: Camera
+
 Camera :: struct {
 	pos:              Vec3,
 	front:            Vec3,
@@ -13,6 +15,10 @@ Camera :: struct {
 	yaw:              f32,
 	pitch:            f32,
 	spotlight_handle: LightHandle,
+}
+
+init_camera :: proc() {
+	camera = make_camera()
 }
 
 make_camera :: proc() -> Camera {
