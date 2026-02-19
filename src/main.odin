@@ -2,7 +2,6 @@
 package main
 
 import "base:runtime"
-import "core:fmt"
 import "core:log"
 
 import "./gs"
@@ -14,7 +13,6 @@ import sg "vendor/sokol/sokol/gfx"
 import sglue "vendor/sokol/sokol/glue"
 import shelpers "vendor/sokol/sokol/helpers"
 import stime "vendor/sokol/sokol/time"
-import mu "vendor:microui"
 
 our_context: runtime.Context
 
@@ -71,15 +69,14 @@ cleanup :: proc "c" () {
 frame :: proc "c" () {
 	context = our_context
 
-	// Build UI before the render pass (mu.begin/end don't touch the GPU)
-	mu_ctx := ui.ctx_ptr()
-	ui.begin_frame()
-	if mu.begin_window(mu_ctx, "Debug", {10, 10, 160, 60}, {.NO_RESIZE, .NO_CLOSE}) {
-		buf: [64]u8
-		mu.layout_row(mu_ctx, {-1}, 0)
-		mu.label(mu_ctx, fmt.bprintf(buf[:], "dt: %.2f ms", g.dt * 1000))
-		mu.end_window(mu_ctx)
-	}
+	// ==================== UPDATE ====================
+	g.dt = f32(stime.sec(stime.laptime(&g.last_time)))
+
+	toggle_debug_menu(g.input)
+	toggle_mouse_lock(&g.input)
+
+	update_camera(&g.camera, &g.input)
+	// ===================== DRAW =====================
 
 	sg.begin_pass(
 		{
@@ -91,9 +88,9 @@ frame :: proc "c" () {
 		},
 	)
 
-	g.dt = f32(stime.sec(stime.laptime(&g.last_time)))
+	ui.begin_frame()
 
-	update_camera(&g.camera, &g.input)
+	render_debug_ui()
 
 	draw_floor()
 
@@ -102,7 +99,7 @@ frame :: proc "c" () {
 			continue
 		}
 
-		e.update(&e)
+		e.update(&e) // TODO: should update entities above together with the other updates
 		e.draw(&e, g.camera)
 	}
 
@@ -122,7 +119,6 @@ event :: proc "c" (event: ^sapp.Event) {
 
 	update_input_maps(event, &g.input)
 	update_mouse_delta(event, &g.input)
-	toggle_mouse_lock(&g.input)
 }
 
 init_game_state :: proc() {

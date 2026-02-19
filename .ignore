@@ -3,3 +3,4 @@ src/vendor/
 
 *.md
 !README.md
+!docs/*.md
