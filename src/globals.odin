@@ -1,6 +1,7 @@
 package main
 
 import "./shaders"
+import model "model"
 
 Globals :: struct {
 	// timing
@@ -23,7 +24,7 @@ Globals :: struct {
 	using light_globals:  LightGlobals,
 
 	// floor
-	floor:                FloorGlobals,
+	floor_model:          ^model.Model,
 }
 
 g: Globals
