@@ -7,6 +7,8 @@ import sapp "../vendor/sokol/sokol/app"
 import sg   "../vendor/sokol/sokol/gfx"
 import s    "../shaders"
 
+FONT_SCALE :: f32(1.5)
+
 MAX_QUADS :: 16384
 MAX_VERTS :: MAX_QUADS * 4
 MAX_IDXS  :: MAX_QUADS * 6
@@ -46,10 +48,20 @@ MAX_BATCHES :: 256
 @(private) _batches:    [MAX_BATCHES]_Batch
 @(private) _batch_n:    int
 
+@(private)
+_scaled_text_width :: proc(font: mu.Font, str: string) -> i32 {
+	return i32(f32(mu.default_atlas_text_width(font, str)) * FONT_SCALE)
+}
+
+@(private)
+_scaled_text_height :: proc(font: mu.Font) -> i32 {
+	return i32(f32(mu.default_atlas_text_height(font)) * FONT_SCALE)
+}
+
 init :: proc() {
 	mu.init(&_ctx)
-	_ctx.text_width  = mu.default_atlas_text_width
-	_ctx.text_height = mu.default_atlas_text_height
+	_ctx.text_width  = _scaled_text_width
+	_ctx.text_height = _scaled_text_height
 
 	// Upload the built-in bitmap font atlas as a single-channel R8 texture
 	_atlas_img = sg.make_image({
@@ -69,8 +81,8 @@ init :: proc() {
 		},
 	})
 	_atlas_smp = sg.make_sampler({
-		min_filter = .NEAREST,
-		mag_filter = .NEAREST,
+		min_filter = .LINEAR,
+		mag_filter = .LINEAR,
 	})
 
 	// 2D pipeline: alpha blending enabled, no depth write/test
@@ -162,8 +174,10 @@ render :: proc() {
 				if ch & 0xc0 == 0x80 { continue }
 				r := int(min(ch, 127))
 				g := mu.default_atlas[mu.DEFAULT_ATLAS_FONT + r]
-				_push_quad({pos.x, pos.y, g.w, g.h}, _atlas_rect_uv(g), v.color)
-				pos.x += g.w
+				sw := i32(f32(g.w) * FONT_SCALE)
+				sh := i32(f32(g.h) * FONT_SCALE)
+				_push_quad({pos.x, pos.y, sw, sh}, _atlas_rect_uv(g), v.color)
+				pos.x += sw
 			}
 		case ^mu.Command_Icon:
 			g := mu.default_atlas[int(v.id)]

@@ -74,7 +74,7 @@ render_debug_ui :: proc() {
 	if mu.begin_window(
 		mu_ctx,
 		fmt.bprintf(buf[:], "Debug Menu: %s", current_menu_option),
-		{10, 10, 200, 300},
+		{10, 10, 300, 400},
 		{.NO_CLOSE, .NO_RESIZE},
 	) {
 		draw_toggle_menu_options()
