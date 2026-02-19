@@ -5,6 +5,7 @@ import "base:runtime"
 import "core:log"
 
 import "./gs"
+import "./shaders"
 
 import sapp "vendor/sokol/sokol/app"
 import sg "vendor/sokol/sokol/gfx"
@@ -47,6 +48,8 @@ init :: proc "c" () {
 	)
 
 	set_mouse_lock(false)
+
+	shaders.init()
 
 	init_globals()
 

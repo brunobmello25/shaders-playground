@@ -1,5 +1,7 @@
 package shaders
 
+import "core:fmt"
+
 import sg "../vendor/sokol/sokol/gfx"
 
 
@@ -12,7 +14,20 @@ ShaderKind :: enum {
 	Entity,
 }
 
+loaded_shaders: map[ShaderKind]Shader = {}
+
+init :: proc() {
+	for kind in ShaderKind {
+		load(kind)
+	}
+}
+
 load :: proc(kind: ShaderKind) -> Shader {
+	cached, ok := loaded_shaders[kind]
+	if ok {
+		return cached
+	}
+
 	desc: sg.Shader_Desc
 	layout: sg.Vertex_Layout_State
 
@@ -41,5 +56,20 @@ load :: proc(kind: ShaderKind) -> Shader {
 		},
 	)
 
-	return Shader{kind = kind, pipeline = pipeline}
+	s := Shader {
+		kind     = kind,
+		pipeline = pipeline,
+	}
+
+	loaded_shaders[kind] = s
+
+	return s
+}
+
+get :: proc(kind: ShaderKind) -> Shader {
+	s, ok := loaded_shaders[kind]
+
+	fmt.assertf(ok, "Shader of kind %v not loaded", kind)
+
+	return s
 }

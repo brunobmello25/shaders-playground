@@ -18,7 +18,7 @@ init_floor :: proc() -> ^model.Model {
 draw_floor :: proc() {
 	view, proj := view_and_projection(g.camera)
 
-	sg.apply_pipeline(g.entity_shader.pipeline)
+	sg.apply_pipeline(shaders.get(.Entity).pipeline)
 
 	vs_params := shaders.Entity_Vs_Params {
 		model         = linalg.identity(Mat4),

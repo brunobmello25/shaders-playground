@@ -96,7 +96,7 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 
 	view, proj := view_and_projection(camera)
 
-	sg.apply_pipeline(g.entity_shader.pipeline)
+	sg.apply_pipeline(shaders.get(.Entity).pipeline)
 
 	vs_params := shaders.Entity_Vs_Params {
 		model         = model_matrix,

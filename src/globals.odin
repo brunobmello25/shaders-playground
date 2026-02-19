@@ -1,14 +1,9 @@
 package main
 
-import "./shaders"
-
 Globals :: struct {
 	// timing
 	dt:                   f32,
 	last_time:            u64,
-
-	//shaders
-	entity_shader:        shaders.Shader,
 
 	//camera
 	camera:               Camera,
@@ -26,8 +21,6 @@ Globals :: struct {
 g: Globals
 
 init_globals :: proc() {
-	g.entity_shader = shaders.load(.Entity)
-
 	g.camera = make_camera()
 
 	setup_world_lights()
