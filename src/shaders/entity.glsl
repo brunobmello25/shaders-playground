@@ -65,7 +65,8 @@ layout (binding=1) uniform texture2D entity_specular_texture;
 layout (binding=0) uniform sampler entity_diffuse_sampler;
 layout (binding=1) uniform sampler entity_specular_sampler;
 
-#define MAX_LIGHTS 8
+// FIXME: aparentemente temos um bug com uma luz presa na camera: mover a camera olhando pra baixo parece mover uma luz. talvez a luz direcional esteja bugada?
+#define MAX_LIGHTS 8 
 #define LIGHT_DIRECTIONAL 1
 #define LIGHT_POINT 2
 #define LIGHT_SPOT 3

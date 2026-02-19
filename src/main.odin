@@ -82,7 +82,13 @@ frame :: proc "c" () {
 		{
 			swapchain = sglue.swapchain(),
 			action = {
-				colors = {0 = {load_action = .CLEAR, clear_value = {0.1, 0.1, 0.1, 1}}},
+				// 497c80
+				colors = {
+					0 = {
+						load_action = .CLEAR,
+						clear_value = {224.0 / 255.0, 238.0 / 255.0, 222.0 / 255.0, 1},
+					},
+				},
 				depth = {load_action = .CLEAR, clear_value = 1.0},
 			},
 		},

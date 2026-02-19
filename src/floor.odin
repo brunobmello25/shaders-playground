@@ -12,7 +12,7 @@ FLOOR_Y :: 0.0
 FLOOR_SIZE :: 100.0
 
 init_floor :: proc() -> ^model.Model {
-	return model.make_plane(FLOOR_SIZE, diffuse = {144, 238, 144, 255})
+	return model.make_plane(FLOOR_SIZE, diffuse = {12, 35, 48, 255})
 }
 
 draw_floor :: proc() {
