@@ -2,16 +2,19 @@
 package main
 
 import "base:runtime"
+import "core:fmt"
 import "core:log"
 
 import "./gs"
 import "./shaders"
+import "./ui"
 
 import sapp "vendor/sokol/sokol/app"
 import sg "vendor/sokol/sokol/gfx"
 import sglue "vendor/sokol/sokol/glue"
 import shelpers "vendor/sokol/sokol/helpers"
 import stime "vendor/sokol/sokol/time"
+import mu "vendor:microui"
 
 our_context: runtime.Context
 
@@ -50,6 +53,7 @@ init :: proc "c" () {
 	set_mouse_lock(false)
 
 	shaders.init()
+	ui.init()
 
 	init_globals()
 
@@ -61,10 +65,21 @@ init :: proc "c" () {
 
 cleanup :: proc "c" () {
 	context = our_context
+	ui.shutdown()
 }
 
 frame :: proc "c" () {
 	context = our_context
+
+	// Build UI before the render pass (mu.begin/end don't touch the GPU)
+	mu_ctx := ui.ctx_ptr()
+	ui.begin_frame()
+	if mu.begin_window(mu_ctx, "Debug", {10, 10, 160, 60}, {.NO_RESIZE, .NO_CLOSE}) {
+		buf: [64]u8
+		mu.layout_row(mu_ctx, {-1}, 0)
+		mu.label(mu_ctx, fmt.bprintf(buf[:], "dt: %.2f ms", g.dt * 1000))
+		mu.end_window(mu_ctx)
+	}
 
 	sg.begin_pass(
 		{
@@ -91,13 +106,19 @@ frame :: proc "c" () {
 		e.draw(&e, g.camera)
 	}
 
+	// Render UI on top of 3D (inside the same pass)
+	ui.render()
+
 	sg.end_pass()
+	sg.commit()
 
 	update_key_states(&g.input)
 }
 
 event :: proc "c" (event: ^sapp.Event) {
 	context = our_context
+
+	ui.handle_event(event)
 
 	update_input_maps(event, &g.input)
 	update_mouse_delta(event, &g.input)
