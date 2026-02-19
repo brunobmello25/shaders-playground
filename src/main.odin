@@ -15,6 +15,8 @@ import stime "vendor/sokol/sokol/time"
 
 our_context: runtime.Context
 
+dt: f32
+
 main :: proc() {
 	context.logger = log.create_console_logger()
 	our_context = context
@@ -70,7 +72,8 @@ frame :: proc "c" () {
 	context = our_context
 
 	// ==================== UPDATE ====================
-	g.dt = f32(stime.sec(stime.laptime(&g.last_time)))
+	@(static) last_time: u64
+	dt = f32(stime.sec(stime.laptime(&last_time)))
 
 	toggle_debug_menu(input)
 	toggle_mouse_lock(&input)

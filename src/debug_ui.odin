@@ -31,7 +31,7 @@ draw_info_menu :: proc() {
 	buf: [128]byte
 
 	// FPS
-	mu.label(mu_ctx, fmt.bprintf(buf[:], "FPS: %f", 1.0 / g.dt))
+	mu.label(mu_ctx, fmt.bprintf(buf[:], "FPS: %f", 1.0 / dt))
 
 	// Camera Pos and target
 	{

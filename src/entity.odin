@@ -37,7 +37,7 @@ Entity :: struct {
 	draw:           proc(e: ^Entity, camera: Camera),
 }
 
-entities:                    [MAX_ENTITIES]Entity
+entities: [MAX_ENTITIES]Entity
 next_available_entity_index: int
 
 setup_character :: proc(e: ^Entity) {
@@ -59,7 +59,7 @@ setup_character :: proc(e: ^Entity) {
 			log.debugf("Switched to animation index %d", e.animation_idx)
 		}
 
-		e.animation_time += f64(g.dt)
+		e.animation_time += f64(dt)
 	}
 
 	e.draw = entity_draw
