@@ -61,6 +61,10 @@ init :: proc "c" () {
 
 	ch := entity_create()
 	setup_character(ch)
+
+	pd := entity_create()
+	setup_picadrill(pd)
+	pd.position = {0, 0, -5}
 }
 
 cleanup :: proc "c" () {
@@ -111,11 +115,11 @@ frame :: proc "c" () {
 		e.draw(&e, camera)
 	}
 
+	// ===================== Wrap up =====================
+
 	// Render UI on top of 3D (inside the same pass)
 	ui.render()
 
-
-	// ===================== Wrap up =====================
 	update_key_states(&input)
 
 	sg.end_pass()

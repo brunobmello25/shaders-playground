@@ -13,6 +13,7 @@ MAX_ENTITIES :: 100
 EntityKind :: enum {
 	nil,
 	Character,
+	Picadrill,
 }
 
 EntityHandle :: struct {
@@ -39,6 +40,16 @@ Entity :: struct {
 
 entities: [MAX_ENTITIES]Entity
 next_available_entity_index: int
+
+setup_picadrill :: proc(e: ^Entity) {
+	e.kind = .Picadrill
+
+	e.model = model.load(.Picadrill) or_else panic("Failed to load picadrill model") // TODO: handle model not loading someday?
+
+	e.animation_idx = -1
+
+	e.draw = entity_draw
+}
 
 setup_character :: proc(e: ^Entity) {
 	e.kind = .Character
@@ -84,6 +95,9 @@ entity_create :: proc() -> ^Entity {
 	entity.scale = Vec3{1.0, 1.0, 1.0}
 	entity.position = Vec3{0.0, 0.0, 0.0}
 	entity.animation_idx = -1
+
+	entity.update = proc(e: ^Entity) {}
+	entity.draw = proc(e: ^Entity, camera: Camera) {}
 
 	return entity
 }

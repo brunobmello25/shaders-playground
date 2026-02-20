@@ -25,10 +25,8 @@ Vec2 :: [2]f32
 Mat4 :: matrix[4, 4]f32
 
 ModelKind :: enum {
-	Bulb,
-	Backpack,
-	Container,
 	CharacterLowPoly,
+	Picadrill,
 }
 
 // TODO: this is duplicated from helpers. maybe move this to a package
@@ -86,7 +84,7 @@ VectorKey :: struct {
 }
 
 QuatKey :: struct {
-	time:        f64,
+	time:       f64,
 	x, y, z, w: f32,
 }
 
@@ -445,6 +443,17 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 		}
 	}
 
+	// Ensure every vertex has at least one bone influence so the skinning shader
+	// doesn't zero out positions (skinned_pos starts at vec4(0) and sums weight*transform*pos).
+	for i in 0 ..< len(vertices) {
+		if _, ok := vertex_bone_data[i]; !ok {
+			vertex_bone_data[i] = VertexBoneData {
+				influences = {0 = {bone_index = 0, weight = 1.0}},
+				count = 1,
+			}
+		}
+	}
+
 	// Build bone name -> index map for animation lookups
 	bone_map: map[string]int
 	for i in 0 ..< len(bones) {
@@ -496,6 +505,13 @@ process_node :: proc(
 	meshes: ^[dynamic]Mesh,
 	directory: string,
 ) {
+	// Skip collision/physics nodes (COL_ prefix convention)
+	node_name := aistring_to_string(&node.mName)
+	defer delete(node_name)
+	if strings.has_prefix(node_name, "COL_") {
+		return // TODO: parse collider information here
+	}
+
 	// Process all meshes in this node
 	for i in 0 ..< node.mNumMeshes {
 		mesh_index := mem.ptr_offset(node.mMeshes, int(i))^
@@ -514,14 +530,10 @@ process_node :: proc(
 kind_to_path :: proc(kind: ModelKind) -> string {
 	path: string
 	switch kind {
-	case .Bulb:
-		path = ("res/bulb/bulb.obj")
-	case .Backpack:
-		path = ("res/backpack/backpack.obj")
-	case .Container:
-		path = ("res/container/container.obj")
 	case .CharacterLowPoly:
 		path = ("res/character-low-poly/Character.gltf")
+	case .Picadrill:
+		path = ("res/picadrill/picadrill.gltf")
 	}
 
 	path, _ = filepath.from_slash(path) // TEST: test that this really works on windows even though im passing slash here
@@ -567,7 +579,10 @@ extract_animation :: proc(ai_anim: ^assimp.aiAnimation) -> Animation {
 		ch.position_keys = make([]VectorKey, ai_ch.mNumPositionKeys)
 		for j in 0 ..< ai_ch.mNumPositionKeys {
 			k := mem.ptr_offset(ai_ch.mPositionKeys, int(j))^
-			ch.position_keys[j] = VectorKey{time = k.mTime, value = {k.mValue.x, k.mValue.y, k.mValue.z}}
+			ch.position_keys[j] = VectorKey {
+				time  = k.mTime,
+				value = {k.mValue.x, k.mValue.y, k.mValue.z},
+			}
 		}
 
 		ch.rotation_keys = make([]QuatKey, ai_ch.mNumRotationKeys)
@@ -585,7 +600,10 @@ extract_animation :: proc(ai_anim: ^assimp.aiAnimation) -> Animation {
 		ch.scale_keys = make([]VectorKey, ai_ch.mNumScalingKeys)
 		for j in 0 ..< ai_ch.mNumScalingKeys {
 			k := mem.ptr_offset(ai_ch.mScalingKeys, int(j))^
-			ch.scale_keys[j] = VectorKey{time = k.mTime, value = {k.mValue.x, k.mValue.y, k.mValue.z}}
+			ch.scale_keys[j] = VectorKey {
+				time  = k.mTime,
+				value = {k.mValue.x, k.mValue.y, k.mValue.z},
+			}
 		}
 
 		anim.channel_map[ch.node_name] = int(i)
@@ -606,9 +624,15 @@ interpolate_position :: proc(ch: ^NodeAnim, anim_time: f64) -> Vec3 {
 		}
 	}
 
-	t := f32((anim_time - ch.position_keys[idx].time) / (ch.position_keys[idx + 1].time - ch.position_keys[idx].time))
+	t := f32(
+		(anim_time - ch.position_keys[idx].time) /
+		(ch.position_keys[idx + 1].time - ch.position_keys[idx].time),
+	)
 	t = clamp(t, 0, 1)
-	return ch.position_keys[idx].value + t * (ch.position_keys[idx + 1].value - ch.position_keys[idx].value)
+	return(
+		ch.position_keys[idx].value +
+		t * (ch.position_keys[idx + 1].value - ch.position_keys[idx].value) \
+	)
 }
 
 interpolate_rotation :: proc(ch: ^NodeAnim, anim_time: f64) -> quaternion128 {
@@ -649,7 +673,10 @@ interpolate_scale :: proc(ch: ^NodeAnim, anim_time: f64) -> Vec3 {
 		}
 	}
 
-	t := f32((anim_time - ch.scale_keys[idx].time) / (ch.scale_keys[idx + 1].time - ch.scale_keys[idx].time))
+	t := f32(
+		(anim_time - ch.scale_keys[idx].time) /
+		(ch.scale_keys[idx + 1].time - ch.scale_keys[idx].time),
+	)
 	t = clamp(t, 0, 1)
 	return ch.scale_keys[idx].value + t * (ch.scale_keys[idx + 1].value - ch.scale_keys[idx].value)
 }
@@ -680,7 +707,15 @@ compute_node_transforms :: proc(
 	}
 
 	for &child in node.children {
-		compute_node_transforms(&child, global_transform, global_inverse, mesh, anim, anim_time, result)
+		compute_node_transforms(
+			&child,
+			global_transform,
+			global_inverse,
+			mesh,
+			anim,
+			anim_time,
+			result,
+		)
 	}
 }
 
