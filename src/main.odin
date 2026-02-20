@@ -71,15 +71,9 @@ cleanup :: proc "c" () {
 frame :: proc "c" () {
 	context = our_context
 
-	// ==================== UPDATE ====================
+	// ==================== Startup ====================
 	@(static) last_time: u64
 	dt = f32(stime.sec(stime.laptime(&last_time)))
-
-	toggle_debug_menu(input)
-	toggle_mouse_lock(&input)
-
-	update_camera(&camera, &input)
-	// ===================== DRAW =====================
 
 	sg.begin_pass(
 		{
@@ -99,8 +93,13 @@ frame :: proc "c" () {
 
 	ui.begin_frame()
 
-	render_debug_ui()
+	// ==================== Input ====================
+	toggle_debug_menu(input)
+	toggle_mouse_lock(&input)
+	update_camera(&camera, &input)
 
+	// ===================== Bunch of stuff...? =====================
+	render_debug_ui()
 	draw_floor()
 
 	for &e in entities {
@@ -108,17 +107,19 @@ frame :: proc "c" () {
 			continue
 		}
 
-		e.update(&e) // TODO: should update entities above together with the other updates
+		e.update(&e)
 		e.draw(&e, camera)
 	}
 
 	// Render UI on top of 3D (inside the same pass)
 	ui.render()
 
+
+	// ===================== Wrap up =====================
+	update_key_states(&input)
+
 	sg.end_pass()
 	sg.commit()
-
-	update_key_states(&input)
 }
 
 event :: proc "c" (event: ^sapp.Event) {
