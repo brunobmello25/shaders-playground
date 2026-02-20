@@ -12,14 +12,6 @@ debug_menu_open: bool = true
 @(private = "file")
 MenuOption :: enum {
 	GameInfo,
-	Entities,
-}
-
-@(private = "file")
-current_menu_option: MenuOption = .GameInfo
-
-@(private = "file")
-draw_entities_menu :: proc() {
 }
 
 @(private = "file")
@@ -48,21 +40,6 @@ draw_info_menu :: proc() {
 	}
 }
 
-@(private = "file")
-draw_toggle_menu_options :: proc() {
-	mu_ctx := ui.ctx_ptr()
-
-	mu.layout_row(mu_ctx, {100}, 0)
-
-	if .SUBMIT in mu.button(mu_ctx, "Game Info") {
-		current_menu_option = .GameInfo
-	}
-
-	if .SUBMIT in mu.button(mu_ctx, "Entities") {
-		current_menu_option = .Entities
-	}
-}
-
 render_debug_ui :: proc() {
 	if !debug_menu_open {
 		return
@@ -70,21 +47,8 @@ render_debug_ui :: proc() {
 
 	mu_ctx := ui.ctx_ptr()
 
-	buf: [128]byte
-	if mu.begin_window(
-		mu_ctx,
-		fmt.bprintf(buf[:], "Debug Menu: %s", current_menu_option),
-		{10, 10, 300, 400},
-		{.NO_CLOSE, .NO_RESIZE},
-	) {
-		draw_toggle_menu_options()
-
-		switch current_menu_option {
-		case .GameInfo:
-			draw_info_menu()
-		case .Entities:
-			draw_entities_menu()
-		}
+	if mu.begin_window(mu_ctx, "Debug Menu", {10, 10, 300, 400}, {.NO_CLOSE, .NO_RESIZE}) {
+		draw_info_menu()
 
 		mu.end_window(mu_ctx)
 	}
