@@ -121,7 +121,7 @@ setup_world_lights :: proc() {
 		direction = Vec3{-0.2, -1.0, -0.3},
 		ambient = Vec3{0.2, 0.2, 0.2},
 		diffuse = Vec3{0.5, 0.5, 0.5},
-		specular = Vec3{1.0, 1.0, 1.0},
+		specular = Vec3{0.1, 0.1, 0.1},
 	)
 }
 

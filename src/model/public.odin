@@ -121,8 +121,8 @@ make_solid_texture :: proc(color: [4]u8, kind: TextureKind) -> Texture {
 // doesn't zero out positions when all bone_transforms are identity (anim_idx = -1).
 make_plane :: proc(
 	size: f32,
-	diffuse: [4]u8 = {150, 150, 150, 255},
-	specular: [4]u8 = {30, 30, 30, 255},
+	diffuse: [4]u8 = {0, 0, 0, 255},
+	specular: [4]u8 = {0, 0, 0, 255},
 ) -> ^Model {
 	half := size / 2.0
 

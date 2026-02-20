@@ -31,7 +31,7 @@ draw_floor :: proc() {
 
 	fs_params := shaders.Entity_Fs_Params {
 		view_pos  = camera.pos,
-		shininess = 32.0,
+		shininess = 2.0,
 	}
 	sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
 
