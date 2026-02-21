@@ -5,6 +5,7 @@ import "core:math/linalg"
 
 import sg "vendor/sokol/sokol/gfx"
 
+import helpers "helpers"
 import model "model"
 import shaders "shaders"
 
@@ -116,15 +117,15 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 		projection    = proj,
 		normal_matrix = normal_matrix,
 	}
-	sg.apply_uniforms(shaders.UB_Entity_VS_Params, range(&vs_params))
+	sg.apply_uniforms(shaders.UB_Entity_VS_Params, helpers.range(&vs_params))
 
 	fs_params := shaders.Entity_Fs_Params {
 		view_pos  = camera.pos,
 		shininess = 32.0, // TODO: hardcoded
 	}
-	sg.apply_uniforms(shaders.UB_Entity_FS_Params, range(&fs_params))
+	sg.apply_uniforms(shaders.UB_Entity_FS_Params, helpers.range(&fs_params))
 	fs_lights := lights_to_shader_uniform()
-	sg.apply_uniforms(shaders.UB_FS_Lights, range(&fs_lights))
+	sg.apply_uniforms(shaders.UB_FS_Lights, helpers.range(&fs_lights))
 
 	model.draw(e.model, e.animation_idx, e.animation_time)
 }

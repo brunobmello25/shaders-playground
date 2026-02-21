@@ -38,7 +38,7 @@ MAX_BATCHES :: 256
 @(private) _atlas_img:  sg.Image
 @(private) _atlas_view: sg.View
 @(private) _atlas_smp:  sg.Sampler
-@(private) _pipeline:   sg.Pipeline
+@(private) _pipeline:   sg.Pipeline // FIXME: this package isn't using the package shaders... damn it claude
 @(private) _vbuf:       sg.Buffer
 @(private) _ibuf:       sg.Buffer
 @(private) _verts:      [MAX_VERTS]Vertex

@@ -4,6 +4,7 @@ package main
 import "base:runtime"
 import "core:log"
 
+import "./primitives"
 import "./shaders"
 import "./ui"
 
@@ -16,6 +17,11 @@ import stime "vendor/sokol/sokol/time"
 our_context: runtime.Context
 
 dt: f32
+
+Mat4 :: matrix[4, 4]f32
+Vec4 :: [4]f32
+Vec3 :: [3]f32
+Vec2 :: [2]f32
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -57,6 +63,7 @@ init :: proc "c" () {
 	init_camera()
 	setup_world_lights()
 
+	primitives.init()
 	init_game_state()
 
 	ch := entity_create()
@@ -114,6 +121,11 @@ frame :: proc "c" () {
 		e.update(&e)
 		e.draw(&e, camera)
 	}
+
+	// ===================== Debug drawing =====================
+	primitives.draw_sphere({0, 1, 0}, 1)
+	view, proj := view_and_projection(camera)
+	primitives.flush(view, proj, {1, 0, 0, 1})
 
 	// ===================== Wrap up =====================
 

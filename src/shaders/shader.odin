@@ -12,6 +12,7 @@ Shader :: struct {
 
 ShaderKind :: enum {
 	Entity,
+	Primitives,
 }
 
 loaded_shaders: map[ShaderKind]Shader = {}
@@ -30,6 +31,7 @@ load :: proc(kind: ShaderKind) -> Shader {
 
 	desc: sg.Shader_Desc
 	layout: sg.Vertex_Layout_State
+	pip_desc: sg.Pipeline_Desc
 
 	switch kind {
 	case .Entity:
@@ -43,18 +45,28 @@ load :: proc(kind: ShaderKind) -> Shader {
 				ATTR_entity_bone_weights = {format = .FLOAT4},
 			},
 		}
-	}
-
-
-	shader := sg.make_shader(desc)
-	pipeline := sg.make_pipeline(
-		{
-			shader = shader,
+		pip_desc = {
+			shader = sg.make_shader(desc),
 			layout = layout,
 			index_type = .UINT32,
 			depth = {compare = .LESS_EQUAL, write_enabled = true},
-		},
-	)
+		}
+	case .Primitives:
+		desc = primitives_shader_desc(sg.query_backend())
+		layout = {
+			attrs = {
+				ATTR_primitives_a_pos = {format = .FLOAT3},
+			},
+		}
+		pip_desc = {
+			shader = sg.make_shader(desc),
+			layout = layout,
+			primitive_type = .LINES,
+			depth = {compare = .LESS_EQUAL, write_enabled = true},
+		}
+	}
+
+	pipeline := sg.make_pipeline(pip_desc)
 
 	s := Shader {
 		kind     = kind,
