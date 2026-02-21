@@ -499,17 +499,50 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 	return mesh
 }
 
+process_collider :: proc(
+	ai_mesh: ^assimp.aiMesh,
+	node_name: string,
+	colliders: ^[dynamic]Collider,
+) {
+	if strings.contains(node_name, "CUBE") {
+		bb_min := Vec3{math.F32_MAX, math.F32_MAX, math.F32_MAX}
+		bb_max := Vec3{math.F32_MIN, math.F32_MIN, math.F32_MIN}
+		for i in 0 ..< ai_mesh.mNumVertices {
+			log.debugf("Collider vertex: %d", i)
+			v := mem.ptr_offset(ai_mesh.mVertices, int(i))
+			bb_min.x = min(bb_min.x, v.x)
+			bb_min.y = min(bb_min.y, v.y)
+			bb_min.z = min(bb_min.z, v.z)
+			bb_max.x = max(bb_max.x, v.x)
+			bb_max.y = max(bb_max.y, v.y)
+			bb_max.z = max(bb_max.z, v.z)
+		}
+		append(colliders, Collider{kind = .Box, min = bb_min, max = bb_max})
+	} else {
+		fmt.panicf(
+			"Unknown collider type for node '%s'. Please name your collider meshes with a type hint, e.g. 'COL_CUBE'",
+			node_name,
+		)
+	}
+}
+
 process_node :: proc(
 	node: ^assimp.aiNode,
 	scene: ^assimp.aiScene,
 	meshes: ^[dynamic]Mesh,
+	colliders: ^[dynamic]Collider,
 	directory: string,
 ) {
 	// Skip collision/physics nodes (COL_ prefix convention)
 	node_name := aistring_to_string(&node.mName)
 	defer delete(node_name)
 	if strings.has_prefix(node_name, "COL_") {
-		return // TODO: parse collider information here
+		assert(node.mNumMeshes == 1, "Collider node must have exactly one mesh")
+		mesh_index := mem.ptr_offset(node.mMeshes, 0)^
+		ai_mesh := mem.ptr_offset(scene.mMeshes, int(mesh_index))^
+		process_collider(ai_mesh, node_name, colliders)
+		log.debugf("Processed collider node '%s'", node_name)
+		return
 	}
 
 	// Process all meshes in this node
@@ -523,7 +556,7 @@ process_node :: proc(
 	// Recursively process children
 	for i in 0 ..< node.mNumChildren {
 		child := mem.ptr_offset(node.mChildren, int(i))^
-		process_node(child, scene, meshes, directory)
+		process_node(child, scene, meshes, colliders, directory)
 	}
 }
 

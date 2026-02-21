@@ -10,10 +10,21 @@ import sg "../vendor/sokol/sokol/gfx"
 
 Model :: struct {
 	meshes:         []Mesh,
+	colliders:      []Collider,
 	directory:      string,
 	root_node:      Node,
 	global_inverse: Mat4,
 	animations:     []Animation,
+}
+
+ColliderKind :: enum {
+	Box,
+}
+
+Collider :: struct {
+	kind: ColliderKind,
+	min:  Vec3, // for box
+	max:  Vec3, // for box
 }
 
 load :: proc(kind: ModelKind) -> (^Model, bool) {
@@ -46,10 +57,11 @@ load :: proc(kind: ModelKind) -> (^Model, bool) {
 
 	// Process meshes
 	meshes := make([dynamic]Mesh)
+	colliders := make([dynamic]Collider)
 
 	// Try node hierarchy first
 	if scene.mRootNode != nil {
-		process_node(scene.mRootNode, scene, &meshes, directory)
+		process_node(scene.mRootNode, scene, &meshes, &colliders, directory)
 	}
 
 	// If no meshes from nodes, process all scene meshes directly
@@ -77,7 +89,8 @@ load :: proc(kind: ModelKind) -> (^Model, bool) {
 		len(animations),
 	)
 	loaded_models[filepath] = Model {
-		meshes         = meshes[:],
+		meshes         = meshes[:], // TODO: are we memory leaking here?
+		colliders      = colliders[:],
 		directory      = directory,
 		root_node      = root_node,
 		global_inverse = global_inverse,
