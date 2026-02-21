@@ -123,11 +123,6 @@ frame :: proc "c" () {
 		e.draw(&e, camera)
 	}
 
-	// ===================== Debug drawing =====================
-	primitives.draw_sphere({0, 1, 0}, 1)
-	view, proj := view_and_projection(camera)
-	primitives.flush(linalg.identity(Mat4), view, proj, {1, 0, 0, 1})
-
 	// ===================== Wrap up =====================
 
 	// Render UI on top of 3D (inside the same pass)
