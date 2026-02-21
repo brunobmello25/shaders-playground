@@ -3,6 +3,7 @@ package main
 
 import "base:runtime"
 import "core:log"
+import "core:math/linalg"
 
 import "./primitives"
 import "./shaders"
@@ -125,7 +126,7 @@ frame :: proc "c" () {
 	// ===================== Debug drawing =====================
 	primitives.draw_sphere({0, 1, 0}, 1)
 	view, proj := view_and_projection(camera)
-	primitives.flush(view, proj, {1, 0, 0, 1})
+	primitives.flush(linalg.identity(Mat4), view, proj, {1, 0, 0, 1})
 
 	// ===================== Wrap up =====================
 

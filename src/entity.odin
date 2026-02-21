@@ -5,9 +5,10 @@ import "core:math/linalg"
 
 import sg "vendor/sokol/sokol/gfx"
 
-import helpers "helpers"
-import model "model"
-import shaders "shaders"
+import "helpers"
+import "model"
+import "primitives"
+import "shaders"
 
 MAX_ENTITIES :: 100
 
@@ -128,4 +129,13 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 	sg.apply_uniforms(shaders.UB_FS_Lights, helpers.range(&fs_lights))
 
 	model.draw(e.model, e.animation_idx, e.animation_time)
+
+	when ODIN_DEBUG {
+		for collider in e.model.colliders {
+			if collider.kind == .Box {
+				primitives.draw_box(collider.min, collider.max)
+			}
+		}
+		primitives.flush(model_matrix, view, proj, {1, 0, 0, 1})
+	}
 }

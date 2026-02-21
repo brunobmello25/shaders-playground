@@ -166,12 +166,12 @@ draw_box :: proc(min, max: Vec3) {
 	draw_line({min.x, min.y, max.z}, {min.x, max.y, max.z})
 }
 
-flush :: proc(view, proj: Mat4, color: Vec4 = {1, 1, 1, 1}) {
+flush :: proc(model, view, proj: Mat4, color: Vec4 = {1, 1, 1, 1}) {
 	if prim_vertex_count == 0 {
 		return
 	}
 
-	sg.update_buffer(
+	byte_offset := sg.append_buffer(
 		prim_buffer,
 		{ptr = &prim_vertices, size = uint(prim_vertex_count * size_of(Vec3))},
 	)
@@ -179,6 +179,7 @@ flush :: proc(view, proj: Mat4, color: Vec4 = {1, 1, 1, 1}) {
 	sg.apply_pipeline(shaders.get(.Primitives).pipeline)
 
 	vs_params := shaders.Primitives_Vs_Params {
+		model      = model,
 		view       = view,
 		projection = proj,
 	}
@@ -191,6 +192,7 @@ flush :: proc(view, proj: Mat4, color: Vec4 = {1, 1, 1, 1}) {
 
 	bindings: sg.Bindings
 	bindings.vertex_buffers[0] = prim_buffer
+	bindings.vertex_buffer_offsets[0] = byte_offset
 	sg.apply_bindings(bindings)
 
 	sg.draw(0, u32(prim_vertex_count), 1)

@@ -9,12 +9,13 @@
 in vec3 a_pos;
 
 layout(binding=0) uniform Primitives_Vs_Params {
+	mat4 model;
 	mat4 view;
 	mat4 projection;
 };
 
 void main() {
-	gl_Position = projection * view * vec4(a_pos, 1.0);
+	gl_Position = projection * view * model * vec4(a_pos, 1.0);
 }
 
 @end
