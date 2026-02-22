@@ -56,6 +56,9 @@ out vec4 frag_color;
 
 layout (binding=2) uniform Entity_FS_Params {
 	vec3 view_pos;
+	float fog_start;
+	float fog_end;
+	vec3 fog_color;
 	float shininess;
 };
 
@@ -163,6 +166,31 @@ vec3 calculate_spot_light(Light light) {
 	return calculate_phong_lighting(light, attenuation, light.position - frag_world_pos) * intensity;
 }
 
+float calculate_linear_fog_factor() {
+	float camera_to_pixel_dist = length(frag_world_pos - view_pos);
+	float fog_range = fog_end - fog_start;
+	float fog_dist = fog_end - camera_to_pixel_dist;
+	float fog_factor = fog_dist / fog_range;
+	fog_factor = clamp(fog_factor, 0.0, 1.0);
+	return fog_factor;
+}
+
+float calculate_fog_factor() {
+	float fog_factor = calculate_linear_fog_factor();
+
+	return fog_factor;
+}
+
+vec3 apply_fog(vec3 frag_color, vec3 fog_color) {
+	if(fog_color == vec3(0)) {
+		return frag_color;
+	}
+
+	float fog_factor = calculate_fog_factor();
+
+	return mix(fog_color, frag_color, fog_factor);
+}
+
 void main() {
 	vec3 result = vec3(0.0);
 	for (int i = 0; i < fs_lights.light_count; i++) {
@@ -175,6 +203,8 @@ void main() {
 			result += calculate_spot_light(light);
 		}
 	}
+
+	result = apply_fog(result, fog_color);
 
 	frag_color = vec4(result, 1.0);
 }
