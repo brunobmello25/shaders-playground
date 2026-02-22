@@ -22,7 +22,7 @@ init_camera :: proc() {
 }
 
 make_camera :: proc() -> Camera {
-	pos := Vec3{0, 5, 8}
+	pos := Vec3{10, 10, 11}
 	front := Vec3{0, 0, -1}
 
 	spotlight := light_create()
@@ -45,8 +45,8 @@ make_camera :: proc() -> Camera {
 		pos = pos,
 		front = front,
 		up = {0, 1, 0},
-		yaw = -90,
-		pitch = 0,
+		yaw = -135,
+		pitch = -30,
 		spotlight_handle = light_to_handle(spotlight),
 	}
 }

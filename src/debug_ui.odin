@@ -26,7 +26,7 @@ draw_info_menu :: proc() {
 	mu.label(mu_ctx, fmt.bprintf(buf[:], "FPS: %f", 1.0 / dt))
 
 	// Camera
-	if .ACTIVE in mu.header(mu_ctx, "Camera") {
+	if .ACTIVE in mu.header(mu_ctx, "Camera", {.EXPANDED}) {
 		labeled_number :: proc(ctx: ^mu.Context, label: string, val: ^mu.Real, step: mu.Real) {
 			mu.layout_row(ctx, {60, -1}, 0)
 			mu.label(ctx, label)
