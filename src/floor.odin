@@ -4,17 +4,17 @@ import "core:math/linalg"
 
 import sg "vendor/sokol/sokol/gfx"
 
+import "config"
 import helpers "helpers"
 import model "model"
 import shaders "shaders"
 
 FLOOR_Y :: 0.0
-FLOOR_SIZE :: 100.0
 
 floor_model: ^model.Model
 
 init_floor :: proc() {
-	floor_model = model.make_plane(FLOOR_SIZE, diffuse = {12, 35, 48, 255})
+	floor_model = model.make_plane(1.0, diffuse = {12, 35, 48, 255})
 }
 
 draw_floor :: proc() {
@@ -22,8 +22,10 @@ draw_floor :: proc() {
 
 	sg.apply_pipeline(shaders.get(.Entity).pipeline)
 
+	world_size := config.get().world_size
+	floor_scale := linalg.matrix4_scale_f32(Vec3{world_size, 1.0, world_size})
 	vs_params := shaders.Entity_Vs_Params {
-		model         = linalg.identity(Mat4),
+		model         = floor_scale,
 		view          = view,
 		projection    = proj,
 		normal_matrix = linalg.identity(Mat4),
@@ -33,6 +35,9 @@ draw_floor :: proc() {
 	fs_params := shaders.Entity_Fs_Params {
 		view_pos  = camera.pos,
 		shininess = 2.0,
+		fog_start = config.get().fog.start,
+		fog_end   = config.get().fog.end,
+		fog_color = sky_color.rgb,
 	}
 	sg.apply_uniforms(shaders.UB_Entity_FS_Params, helpers.range(&fs_params))
 

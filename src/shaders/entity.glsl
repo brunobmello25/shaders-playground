@@ -167,12 +167,10 @@ vec3 calculate_spot_light(Light light) {
 }
 
 float calculate_linear_fog_factor() {
-	float camera_to_pixel_dist = length(frag_world_pos - view_pos);
+	float dist_from_center = length(frag_world_pos.xz);
 	float fog_range = fog_end - fog_start;
-	float fog_dist = fog_end - camera_to_pixel_dist;
-	float fog_factor = fog_dist / fog_range;
-	fog_factor = clamp(fog_factor, 0.0, 1.0);
-	return fog_factor;
+	float fog_factor = (fog_end - dist_from_center) / fog_range;
+	return clamp(fog_factor, 0.0, 1.0);
 }
 
 float calculate_fog_factor() {

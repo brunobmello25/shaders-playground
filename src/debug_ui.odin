@@ -44,6 +44,7 @@ draw_fog_menu :: proc() {
 		mu.number(ctx, val, step)
 	}
 
+	labeled_number(mu_ctx, "World size", &config.get().world_size, 1.0)
 	labeled_number(mu_ctx, "Fog start", &config.get().fog.start, 0.1)
 	labeled_number(mu_ctx, "Fog end", &config.get().fog.end, 0.1)
 

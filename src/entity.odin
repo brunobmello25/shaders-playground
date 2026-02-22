@@ -124,7 +124,7 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 		shininess = 32.0, // TODO: hardcoded
 		fog_start = config.get().fog.start,
 		fog_end   = config.get().fog.end,
-		fog_color = config.get().fog.color,
+		fog_color = sky_color.rgb,
 	}
 	sg.apply_uniforms(shaders.UB_Entity_FS_Params, helpers.range(&fs_params))
 	fs_lights := lights_to_shader_uniform()

@@ -10,16 +10,17 @@ Vec3 :: [3]f32
 ConfigPath :: "config.json"
 
 Config :: struct {
-	fog: struct {
+	world_size: f32,
+	fog:        struct {
 		start:     f32,
 		end:       f32,
 		shininess: f32,
-		color:     Vec3,
 	},
 }
 
 default_config: Config = {
-	fog = {start = 0.0, end = 100.0, shininess = 1.0, color = Vec3{0.5, 0.5, 0.5}},
+	world_size = 100.0,
+	fog        = {start = 30.0, end = 50.0, shininess = 1.0},
 }
 
 @(private = "file")
