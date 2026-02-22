@@ -48,8 +48,6 @@ setup_picadrill :: proc(e: ^Entity) {
 
 	e.model = model.load(.Picadrill) or_else panic("Failed to load picadrill model") // TODO: handle model not loading someday?
 
-	e.animation_idx = -1
-
 	e.draw = entity_draw
 }
 
@@ -132,8 +130,11 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 
 	when ODIN_DEBUG {
 		for collider in e.model.colliders {
-			if collider.kind == .Box {
+			switch collider.kind {
+			case .Box:
 				primitives.draw_box(collider.min, collider.max)
+			case .Cylinder:
+				primitives.draw_cylinder(collider.min, collider.max, collider.radius, 16)
 			}
 		}
 		primitives.flush(model_matrix, view, proj, {1, 0, 0, 1})

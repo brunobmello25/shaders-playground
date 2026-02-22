@@ -501,6 +501,7 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 
 process_collider :: proc(
 	ai_mesh: ^assimp.aiMesh,
+	node: ^assimp.aiNode,
 	node_name: string,
 	colliders: ^[dynamic]Collider,
 ) {
@@ -518,6 +519,40 @@ process_collider :: proc(
 			bb_max.z = max(bb_max.z, v.z)
 		}
 		append(colliders, Collider{kind = .Box, min = bb_min, max = bb_max})
+
+	} else if strings.contains(node_name, "CYLINDER") {
+		// Convention: cylinder is always Y-aligned in local space.
+		// Extract the world-space axis from the node transform's Y column.
+		mat := node.mTransformation
+		dir := linalg.normalize(Vec3{mat.a2, mat.b2, mat.c2})
+
+		bb_min := Vec3{math.F32_MAX, math.F32_MAX, math.F32_MAX}
+		bb_max := Vec3{math.F32_MIN, math.F32_MIN, math.F32_MIN}
+		for i in 0 ..< ai_mesh.mNumVertices {
+			v := mem.ptr_offset(ai_mesh.mVertices, int(i))
+			bb_min.x = min(bb_min.x, v.x)
+			bb_min.y = min(bb_min.y, v.y)
+			bb_min.z = min(bb_min.z, v.z)
+			bb_max.x = max(bb_max.x, v.x)
+			bb_max.y = max(bb_max.y, v.y)
+			bb_max.z = max(bb_max.z, v.z)
+		}
+
+		extents := bb_max - bb_min
+		height := extents.y
+		radius := max(extents.x, extents.z) / 2.0
+
+		append(
+			colliders,
+			Collider {
+				kind = .Cylinder,
+				min = bb_min,
+				max = bb_max,
+				direction = dir,
+				radius = radius,
+				height = height,
+			},
+		)
 	} else {
 		fmt.panicf(
 			"Unknown collider type for node '%s'. Please name your collider meshes with a type hint, e.g. 'COL_CUBE'",
@@ -540,7 +575,7 @@ process_node :: proc(
 		assert(node.mNumMeshes == 1, "Collider node must have exactly one mesh")
 		mesh_index := mem.ptr_offset(node.mMeshes, 0)^
 		ai_mesh := mem.ptr_offset(scene.mMeshes, int(mesh_index))^
-		process_collider(ai_mesh, node_name, colliders)
+		process_collider(ai_mesh, node, node_name, colliders)
 		log.debugf("Processed collider node '%s'", node_name)
 		return
 	}
