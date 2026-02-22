@@ -40,11 +40,6 @@ draw_info_menu :: proc() {
 		labeled_number(mu_ctx, "Pitch", &camera.pitch, 1.0)
 
 		mu.layout_row(mu_ctx, {-1}, 0)
-		front := camera.front
-		mu.label(
-			mu_ctx,
-			fmt.bprintf(buf[:], "Front: (%.2f, %.2f, %.2f)", front.x, front.y, front.z),
-		)
 	}
 }
 
