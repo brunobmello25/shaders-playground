@@ -5,6 +5,7 @@ import "core:math/linalg"
 
 import sg "vendor/sokol/sokol/gfx"
 
+import "config"
 import "helpers"
 import "model"
 import "primitives"
@@ -121,6 +122,9 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 	fs_params := shaders.Entity_Fs_Params {
 		view_pos  = camera.pos,
 		shininess = 32.0, // TODO: hardcoded
+		fog_start = config.get().fog.start,
+		fog_end   = config.get().fog.end,
+		fog_color = config.get().fog.color,
 	}
 	sg.apply_uniforms(shaders.UB_Entity_FS_Params, helpers.range(&fs_params))
 	fs_lights := lights_to_shader_uniform()

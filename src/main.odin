@@ -3,11 +3,11 @@ package main
 
 import "base:runtime"
 import "core:log"
-import "core:math/linalg"
 
-import "./primitives"
-import "./shaders"
-import "./ui"
+import "config"
+import "primitives"
+import "shaders"
+import "ui"
 
 import sapp "vendor/sokol/sokol/app"
 import sg "vendor/sokol/sokol/gfx"
@@ -47,6 +47,8 @@ main :: proc() {
 init :: proc "c" () {
 	context = our_context
 
+	config.load()
+
 	stime.setup()
 
 	sg.setup(
@@ -80,6 +82,7 @@ init :: proc "c" () {
 cleanup :: proc "c" () {
 	context = our_context
 	ui.shutdown()
+	config.save()
 }
 
 frame :: proc "c" () {
