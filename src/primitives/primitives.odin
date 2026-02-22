@@ -60,16 +60,33 @@ draw_sphere :: proc(center: Vec3, radius: f32, segments: int = 16) {
 	}
 }
 
-draw_capsule :: proc(from, to: Vec3, radius: f32, segments: int = 16) {
+draw_circle :: proc(center: Vec3, normal: Vec3, radius: f32, segments: int = 16) {
+	n := linalg.normalize(normal)
+	up := Vec3{0, 1, 0}
+	if math.abs(linalg.dot(n, up)) > 0.99 {
+		up = Vec3{1, 0, 0}
+	}
+	right := linalg.normalize(linalg.cross(n, up))
+	forward := linalg.cross(right, n)
+
+	for i in 0 ..< segments {
+		a0 := f32(i) / f32(segments) * 2.0 * math.PI
+		a1 := f32(i + 1) / f32(segments) * 2.0 * math.PI
+
+		p0 := center + (right * math.cos(a0) + forward * math.sin(a0)) * radius
+		p1 := center + (right * math.cos(a1) + forward * math.sin(a1)) * radius
+		draw_line(p0, p1)
+	}
+}
+
+draw_cylinder :: proc(from, to: Vec3, radius: f32, segments: int = 16) {
 	axis := to - from
 	length := linalg.length(axis)
 	if length < 0.0001 {
-		draw_sphere(from, radius, segments)
 		return
 	}
 
 	dir := axis / length
-	// Build orthonormal basis
 	up := Vec3{0, 1, 0}
 	if math.abs(linalg.dot(dir, up)) > 0.99 {
 		up = Vec3{1, 0, 0}
@@ -77,53 +94,15 @@ draw_capsule :: proc(from, to: Vec3, radius: f32, segments: int = 16) {
 	right := linalg.normalize(linalg.cross(dir, up))
 	forward := linalg.cross(right, dir)
 
-	// Hemispheres
+	draw_circle(from, dir, radius, segments)
+	draw_circle(to, dir, radius, segments)
+
+	// Vertical lines
 	for i in 0 ..< segments {
-		a0 := f32(i) / f32(segments) * math.PI
-		a1 := f32(i + 1) / f32(segments) * math.PI
-
-		// Top hemisphere (around 'to')
-		for j in 0 ..< segments {
-			b0 := f32(j) / f32(segments) * 2.0 * math.PI
-			b1 := f32(j + 1) / f32(segments) * 2.0 * math.PI
-
-			if i < segments / 2 {
-				p0 :=
-					to +
-					(right * math.cos(b0) + forward * math.sin(b0)) * math.sin(a0) * radius +
-					dir * math.cos(a0) * radius
-				p1 :=
-					to +
-					(right * math.cos(b1) + forward * math.sin(b1)) * math.sin(a0) * radius +
-					dir * math.cos(a0) * radius
-				draw_line(p0, p1)
-			}
-		}
-
-		// Bottom hemisphere (around 'from')
-		for j in 0 ..< segments {
-			b0 := f32(j) / f32(segments) * 2.0 * math.PI
-			b1 := f32(j + 1) / f32(segments) * 2.0 * math.PI
-
-			if i >= segments / 2 {
-				p0 :=
-					from +
-					(right * math.cos(b0) + forward * math.sin(b0)) * math.sin(a0) * radius -
-					dir * math.cos(a0) * radius
-				p1 :=
-					from +
-					(right * math.cos(b1) + forward * math.sin(b1)) * math.sin(a0) * radius -
-					dir * math.cos(a0) * radius
-				draw_line(p0, p1)
-			}
-		}
+		a := f32(i) / f32(segments) * 2.0 * math.PI
+		offset := (right * math.cos(a) + forward * math.sin(a)) * radius
+		draw_line(from + offset, to + offset)
 	}
-
-	// 4 connecting lines
-	draw_line(to + right * radius, from + right * radius)
-	draw_line(to - right * radius, from - right * radius)
-	draw_line(to + forward * radius, from + forward * radius)
-	draw_line(to - forward * radius, from - forward * radius)
 }
 
 draw_plane :: proc(origin: Vec3, normal: Vec3, size: f32) {
