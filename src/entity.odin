@@ -135,6 +135,8 @@ entity_draw :: proc(e: ^Entity, camera: Camera) {
 				primitives.draw_box(collider.min, collider.max)
 			case .Cylinder:
 				primitives.draw_cylinder(collider.min, collider.max, collider.radius, 16)
+			case .Sphere:
+				primitives.draw_sphere(collider.center, collider.radius, 16)
 			}
 		}
 		primitives.flush(model_matrix, view, proj, {1, 0, 0, 1})

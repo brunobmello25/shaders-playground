@@ -20,15 +20,17 @@ Model :: struct {
 ColliderKind :: enum {
 	Box,
 	Cylinder,
+	Sphere,
 }
 
 Collider :: struct {
 	kind:      ColliderKind,
 	min:       Vec3,
 	max:       Vec3,
+	center:    Vec3,
 	direction: Vec3, // for cylinder: world-space axis direction
-	radius:    f32,  // for cylinder
-	height:    f32,  // for cylinder
+	radius:    f32, // for cylinder
+	height:    f32, // for cylinder
 }
 
 load :: proc(kind: ModelKind) -> (^Model, bool) {

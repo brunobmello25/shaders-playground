@@ -553,6 +553,24 @@ process_collider :: proc(
 				height = height,
 			},
 		)
+	} else if strings.contains(node_name, "SPHERE") {
+		// Extract center and radius from bounding box
+		bb_min := Vec3{math.F32_MAX, math.F32_MAX, math.F32_MAX}
+		bb_max := Vec3{math.F32_MIN, math.F32_MIN, math.F32_MIN}
+		for i in 0 ..< ai_mesh.mNumVertices {
+			v := mem.ptr_offset(ai_mesh.mVertices, int(i))
+			bb_min.x = min(bb_min.x, v.x)
+			bb_min.y = min(bb_min.y, v.y)
+			bb_min.z = min(bb_min.z, v.z)
+			bb_max.x = max(bb_max.x, v.x)
+			bb_max.y = max(bb_max.y, v.y)
+			bb_max.z = max(bb_max.z, v.z)
+		}
+
+		center := (bb_min + bb_max) / 2.0
+		radius := linalg.length(bb_max - center)
+
+		append(colliders, Collider{kind = .Sphere, center = center, radius = radius})
 	} else {
 		fmt.panicf(
 			"Unknown collider type for node '%s'. Please name your collider meshes with a type hint, e.g. 'COL_CUBE'",
