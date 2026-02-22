@@ -25,17 +25,25 @@ draw_info_menu :: proc() {
 	// FPS
 	mu.label(mu_ctx, fmt.bprintf(buf[:], "FPS: %f", 1.0 / dt))
 
-	// Camera Pos and target
-	{
-		pos := camera.pos
+	// Camera
+	if .ACTIVE in mu.header(mu_ctx, "Camera") {
+		labeled_number :: proc(ctx: ^mu.Context, label: string, val: ^mu.Real, step: mu.Real) {
+			mu.layout_row(ctx, {60, -1}, 0)
+			mu.label(ctx, label)
+			mu.number(ctx, val, step)
+		}
+
+		labeled_number(mu_ctx, "Pos X", &camera.pos.x, 0.1)
+		labeled_number(mu_ctx, "Pos Y", &camera.pos.y, 0.1)
+		labeled_number(mu_ctx, "Pos Z", &camera.pos.z, 0.1)
+		labeled_number(mu_ctx, "Yaw", &camera.yaw, 1.0)
+		labeled_number(mu_ctx, "Pitch", &camera.pitch, 1.0)
+
+		mu.layout_row(mu_ctx, {-1}, 0)
+		front := camera.front
 		mu.label(
 			mu_ctx,
-			fmt.bprintf(buf[:], "camera pos: (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z),
-		)
-		target := camera.front
-		mu.label(
-			mu_ctx,
-			fmt.bprintf(buf[:], "camera front: (%.2f, %.2f, %.2f)", target.x, target.y, target.z),
+			fmt.bprintf(buf[:], "Front: (%.2f, %.2f, %.2f)", front.x, front.y, front.z),
 		)
 	}
 }

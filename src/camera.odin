@@ -93,22 +93,17 @@ update_camera :: proc(camera: ^Camera, input: ^Input) {
 
 		camera.yaw += x_offset
 		camera.pitch -= y_offset
-
-		if camera.pitch > 89 {
-			camera.pitch = 89
-		}
-		if camera.pitch < -89 {
-			camera.pitch = -89
-		}
-
-		new_direction: Vec3
-		new_direction.x =
-			math.cos(math.to_radians(camera.yaw)) * math.cos(math.to_radians(camera.pitch))
-		new_direction.y = math.sin(math.to_radians(camera.pitch))
-		new_direction.z =
-			math.sin(math.to_radians(camera.yaw)) * math.cos(math.to_radians(camera.pitch))
-		camera.front = linalg.normalize0(new_direction)
 	}
+
+	camera.pitch = clamp(camera.pitch, -89, 89)
+
+	new_direction: Vec3
+	new_direction.x =
+		math.cos(math.to_radians(camera.yaw)) * math.cos(math.to_radians(camera.pitch))
+	new_direction.y = math.sin(math.to_radians(camera.pitch))
+	new_direction.z =
+		math.sin(math.to_radians(camera.yaw)) * math.cos(math.to_radians(camera.pitch))
+	camera.front = linalg.normalize0(new_direction)
 
 	input.mouse_delta = {0, 0}
 
