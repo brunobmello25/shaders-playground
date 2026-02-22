@@ -139,35 +139,40 @@ vec3 calculate_phong_lighting(Light light, float attenuation, vec3 direction) {
 	return (ambient + diffuse + specular) * attenuation;
 }
 
-void main () {
-	int light_count = fs_lights.light_count;
+vec3 calculate_directional_light(Light light) {
+	return calculate_phong_lighting(light, 1.0, -light.direction);
+}
 
+vec3 calculate_point_light(Light light) {
+	float dist = length(light.position - frag_world_pos);
+	float attenuation = get_attenuation(light, dist);
+	return calculate_phong_lighting(light, attenuation, light.position - frag_world_pos);
+}
+
+vec3 calculate_spot_light(Light light) {
+	vec3 light_to_frag = frag_world_pos - light.position;
+	float dist = length(light_to_frag);
+	vec3 light_dir = normalize(light_to_frag);
+
+	float theta = dot(light_dir, normalize(light.direction));
+	float cutoff_cos = cos(light.cutoff);
+	float outer_cutoff_cos = cos(light.outer_cutoff);
+	float intensity = clamp((theta - outer_cutoff_cos) / (cutoff_cos - outer_cutoff_cos), 0.0, 1.0);
+
+	float attenuation = get_attenuation(light, dist);
+	return calculate_phong_lighting(light, attenuation, light.position - frag_world_pos) * intensity;
+}
+
+void main() {
 	vec3 result = vec3(0.0);
-	for (int i = 0; i < light_count; i++) {
+	for (int i = 0; i < fs_lights.light_count; i++) {
 		Light light = get_light(i);
-
-		if(light.kind == LIGHT_DIRECTIONAL) {
-			result += calculate_phong_lighting(light, 1.0, -light.direction);
+		if (light.kind == LIGHT_DIRECTIONAL) {
+			result += calculate_directional_light(light);
 		} else if (light.kind == LIGHT_POINT) {
-			float distance = length(light.position - frag_world_pos);
-			float attenuation = get_attenuation(light, distance);
-			result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos);
+			result += calculate_point_light(light);
 		} else if (light.kind == LIGHT_SPOT) {
-			vec3 light_to_frag = frag_world_pos - light.position;
-			float distance = length(light_to_frag);
-			vec3 light_dir = normalize(light_to_frag);
-
-			// angle between spotlight direction and light to fragment direction
-			float theta = dot(light_dir, normalize(light.direction));
-
-			// Convert angle cutoffs to cosine values for comparison
-			float cutoff_cos = cos(light.cutoff);
-			float outer_cutoff_cos = cos(light.outer_cutoff);
-			float epsilon = cutoff_cos - outer_cutoff_cos;
-			float intensity = clamp((theta - outer_cutoff_cos) / epsilon, 0.0, 1.0);
-
-			float attenuation = get_attenuation(light, distance);
-			result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos) * intensity;
+			result += calculate_spot_light(light);
 		}
 	}
 
