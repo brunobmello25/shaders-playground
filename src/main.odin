@@ -3,11 +3,11 @@ package main
 
 import "base:runtime"
 import "core:log"
-import "core:math/linalg"
 
-import "./primitives"
-import "./shaders"
-import "./ui"
+import "config"
+import "primitives"
+import "shaders"
+import "ui"
 
 import sapp "vendor/sokol/sokol/app"
 import sg "vendor/sokol/sokol/gfx"
@@ -23,6 +23,8 @@ Mat4 :: matrix[4, 4]f32
 Vec4 :: [4]f32
 Vec3 :: [3]f32
 Vec2 :: [2]f32
+
+sky_color: Vec4 = {224.0 / 255.0, 238.0 / 255.0, 222.0 / 255.0, 1}
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -44,6 +46,8 @@ main :: proc() {
 
 init :: proc "c" () {
 	context = our_context
+
+	config.load()
 
 	stime.setup()
 
@@ -78,6 +82,7 @@ init :: proc "c" () {
 cleanup :: proc "c" () {
 	context = our_context
 	ui.shutdown()
+	config.save()
 }
 
 frame :: proc "c" () {
@@ -91,11 +96,10 @@ frame :: proc "c" () {
 		{
 			swapchain = sglue.swapchain(),
 			action = {
-				// 497c80
 				colors = {
 					0 = {
 						load_action = .CLEAR,
-						clear_value = {224.0 / 255.0, 238.0 / 255.0, 222.0 / 255.0, 1},
+						clear_value = sg.Color{sky_color.r, sky_color.g, sky_color.b, sky_color.a},
 					},
 				},
 				depth = {load_action = .CLEAR, clear_value = 1.0},

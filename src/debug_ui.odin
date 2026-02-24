@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:log"
 import mu "vendor:microui"
 
+import "./config"
 import "./ui"
 
 @(private = "file")
@@ -12,6 +13,42 @@ debug_menu_open: bool = true
 @(private = "file")
 MenuOption :: enum {
 	GameInfo,
+}
+
+@(private = "file")
+draw_camera_menu :: proc() {
+	mu_ctx := ui.ctx_ptr()
+
+	labeled_number :: proc(ctx: ^mu.Context, label: string, val: ^mu.Real, step: mu.Real) {
+		mu.layout_row(ctx, {60, -1}, 0)
+		mu.label(ctx, label)
+		mu.number(ctx, val, step)
+	}
+
+	labeled_number(mu_ctx, "Pos X", &camera.pos.x, 0.1)
+	labeled_number(mu_ctx, "Pos Y", &camera.pos.y, 0.1)
+	labeled_number(mu_ctx, "Pos Z", &camera.pos.z, 0.1)
+	labeled_number(mu_ctx, "Yaw", &camera.yaw, 1.0)
+	labeled_number(mu_ctx, "Pitch", &camera.pitch, 1.0)
+
+	mu.layout_row(mu_ctx, {-1}, 0)
+}
+
+@(private = "file")
+draw_fog_menu :: proc() {
+	mu_ctx := ui.ctx_ptr()
+
+	labeled_number :: proc(ctx: ^mu.Context, label: string, val: ^mu.Real, step: mu.Real) {
+		mu.layout_row(ctx, {60, -1}, 0)
+		mu.label(ctx, label)
+		mu.number(ctx, val, step)
+	}
+
+	labeled_number(mu_ctx, "World size", &config.get().world_size, 1.0)
+	labeled_number(mu_ctx, "Fog start", &config.get().fog.start, 0.1)
+	labeled_number(mu_ctx, "Fog end", &config.get().fog.end, 0.1)
+
+	mu.layout_row(mu_ctx, {-1}, 0)
 }
 
 @(private = "file")
@@ -27,19 +64,11 @@ draw_info_menu :: proc() {
 
 	// Camera
 	if .ACTIVE in mu.header(mu_ctx, "Camera", {.EXPANDED}) {
-		labeled_number :: proc(ctx: ^mu.Context, label: string, val: ^mu.Real, step: mu.Real) {
-			mu.layout_row(ctx, {60, -1}, 0)
-			mu.label(ctx, label)
-			mu.number(ctx, val, step)
-		}
+		draw_camera_menu()
+	}
 
-		labeled_number(mu_ctx, "Pos X", &camera.pos.x, 0.1)
-		labeled_number(mu_ctx, "Pos Y", &camera.pos.y, 0.1)
-		labeled_number(mu_ctx, "Pos Z", &camera.pos.z, 0.1)
-		labeled_number(mu_ctx, "Yaw", &camera.yaw, 1.0)
-		labeled_number(mu_ctx, "Pitch", &camera.pitch, 1.0)
-
-		mu.layout_row(mu_ctx, {-1}, 0)
+	if .ACTIVE in mu.header(mu_ctx, "Fog") {
+		draw_fog_menu()
 	}
 }
 

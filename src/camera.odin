@@ -1,10 +1,11 @@
 package main
 
 import "core:math"
-
 import "core:math/linalg"
 
 import sapp "vendor/sokol/sokol/app"
+
+import "config"
 
 camera: Camera
 
@@ -62,7 +63,8 @@ view_and_projection :: proc(camera: Camera) -> (Mat4, Mat4) {
 
 	viewWidth := sapp.width()
 	viewHeight := sapp.height()
-	proj := linalg.matrix4_perspective_f32(fov, f32(viewWidth) / f32(viewHeight), 0.1, 100.0, true)
+	far_plane := config.get().world_size * 2.0
+	proj := linalg.matrix4_perspective_f32(fov, f32(viewWidth) / f32(viewHeight), 0.1, far_plane, true)
 
 	return view, proj
 }

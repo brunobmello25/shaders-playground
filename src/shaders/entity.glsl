@@ -56,6 +56,9 @@ out vec4 frag_color;
 
 layout (binding=2) uniform Entity_FS_Params {
 	vec3 view_pos;
+	float fog_start;
+	float fog_end;
+	vec3 fog_color;
 	float shininess;
 };
 
@@ -139,37 +142,67 @@ vec3 calculate_phong_lighting(Light light, float attenuation, vec3 direction) {
 	return (ambient + diffuse + specular) * attenuation;
 }
 
-void main () {
-	int light_count = fs_lights.light_count;
+vec3 calculate_directional_light(Light light) {
+	return calculate_phong_lighting(light, 1.0, -light.direction);
+}
 
+vec3 calculate_point_light(Light light) {
+	float dist = length(light.position - frag_world_pos);
+	float attenuation = get_attenuation(light, dist);
+	return calculate_phong_lighting(light, attenuation, light.position - frag_world_pos);
+}
+
+vec3 calculate_spot_light(Light light) {
+	vec3 light_to_frag = frag_world_pos - light.position;
+	float dist = length(light_to_frag);
+	vec3 light_dir = normalize(light_to_frag);
+
+	float theta = dot(light_dir, normalize(light.direction));
+	float cutoff_cos = cos(light.cutoff);
+	float outer_cutoff_cos = cos(light.outer_cutoff);
+	float intensity = clamp((theta - outer_cutoff_cos) / (cutoff_cos - outer_cutoff_cos), 0.0, 1.0);
+
+	float attenuation = get_attenuation(light, dist);
+	return calculate_phong_lighting(light, attenuation, light.position - frag_world_pos) * intensity;
+}
+
+float calculate_linear_fog_factor() {
+	float dist_from_center = length(frag_world_pos.xz);
+	float fog_range = fog_end - fog_start;
+	float fog_factor = (fog_end - dist_from_center) / fog_range;
+	return clamp(fog_factor, 0.0, 1.0);
+}
+
+float calculate_fog_factor() {
+	float fog_factor = calculate_linear_fog_factor();
+
+	return fog_factor;
+}
+
+vec3 apply_fog(vec3 frag_color, vec3 fog_color) {
+	if(fog_color == vec3(0)) {
+		return frag_color;
+	}
+
+	float fog_factor = calculate_fog_factor();
+
+	return mix(fog_color, frag_color, fog_factor);
+}
+
+void main() {
 	vec3 result = vec3(0.0);
-	for (int i = 0; i < light_count; i++) {
+	for (int i = 0; i < fs_lights.light_count; i++) {
 		Light light = get_light(i);
-
-		if(light.kind == LIGHT_DIRECTIONAL) {
-			result += calculate_phong_lighting(light, 1.0, -light.direction);
+		if (light.kind == LIGHT_DIRECTIONAL) {
+			result += calculate_directional_light(light);
 		} else if (light.kind == LIGHT_POINT) {
-			float distance = length(light.position - frag_world_pos);
-			float attenuation = get_attenuation(light, distance);
-			result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos);
+			result += calculate_point_light(light);
 		} else if (light.kind == LIGHT_SPOT) {
-			vec3 light_to_frag = frag_world_pos - light.position;
-			float distance = length(light_to_frag);
-			vec3 light_dir = normalize(light_to_frag);
-
-			// angle between spotlight direction and light to fragment direction
-			float theta = dot(light_dir, normalize(light.direction));
-
-			// Convert angle cutoffs to cosine values for comparison
-			float cutoff_cos = cos(light.cutoff);
-			float outer_cutoff_cos = cos(light.outer_cutoff);
-			float epsilon = cutoff_cos - outer_cutoff_cos;
-			float intensity = clamp((theta - outer_cutoff_cos) / epsilon, 0.0, 1.0);
-
-			float attenuation = get_attenuation(light, distance);
-			result += calculate_phong_lighting(light, attenuation, light.position - frag_world_pos) * intensity;
+			result += calculate_spot_light(light);
 		}
 	}
+
+	result = apply_fog(result, fog_color);
 
 	frag_color = vec4(result, 1.0);
 }
