@@ -25,10 +25,8 @@ Vec2 :: [2]f32
 Mat4 :: matrix[4, 4]f32
 
 ModelKind :: enum {
-	Bulb,
-	Backpack,
-	Container,
 	CharacterLowPoly,
+	Picadrill,
 }
 
 // TODO: this is duplicated from helpers. maybe move this to a package
@@ -86,7 +84,7 @@ VectorKey :: struct {
 }
 
 QuatKey :: struct {
-	time:        f64,
+	time:       f64,
 	x, y, z, w: f32,
 }
 
@@ -445,6 +443,17 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 		}
 	}
 
+	// Ensure every vertex has at least one bone influence so the skinning shader
+	// doesn't zero out positions (skinned_pos starts at vec4(0) and sums weight*transform*pos).
+	for i in 0 ..< len(vertices) {
+		if _, ok := vertex_bone_data[i]; !ok {
+			vertex_bone_data[i] = VertexBoneData {
+				influences = {0 = {bone_index = 0, weight = 1.0}},
+				count = 1,
+			}
+		}
+	}
+
 	// Build bone name -> index map for animation lookups
 	bone_map: map[string]int
 	for i in 0 ..< len(bones) {
@@ -490,12 +499,105 @@ process_mesh :: proc(ai_mesh: ^assimp.aiMesh, scene: ^assimp.aiScene, directory:
 	return mesh
 }
 
+process_collider :: proc(
+	ai_mesh: ^assimp.aiMesh,
+	node: ^assimp.aiNode,
+	node_name: string,
+	colliders: ^[dynamic]Collider,
+) {
+	if strings.contains(node_name, "CUBE") {
+		bb_min := Vec3{math.F32_MAX, math.F32_MAX, math.F32_MAX}
+		bb_max := Vec3{math.F32_MIN, math.F32_MIN, math.F32_MIN}
+		for i in 0 ..< ai_mesh.mNumVertices {
+			log.debugf("Collider vertex: %d", i)
+			v := mem.ptr_offset(ai_mesh.mVertices, int(i))
+			bb_min.x = min(bb_min.x, v.x)
+			bb_min.y = min(bb_min.y, v.y)
+			bb_min.z = min(bb_min.z, v.z)
+			bb_max.x = max(bb_max.x, v.x)
+			bb_max.y = max(bb_max.y, v.y)
+			bb_max.z = max(bb_max.z, v.z)
+		}
+		append(colliders, Collider{kind = .Box, min = bb_min, max = bb_max})
+
+	} else if strings.contains(node_name, "CYLINDER") {
+		// Convention: cylinder is always Y-aligned in local space.
+		// Extract the world-space axis from the node transform's Y column.
+		mat := node.mTransformation
+		dir := linalg.normalize(Vec3{mat.a2, mat.b2, mat.c2})
+
+		bb_min := Vec3{math.F32_MAX, math.F32_MAX, math.F32_MAX}
+		bb_max := Vec3{math.F32_MIN, math.F32_MIN, math.F32_MIN}
+		for i in 0 ..< ai_mesh.mNumVertices {
+			v := mem.ptr_offset(ai_mesh.mVertices, int(i))
+			bb_min.x = min(bb_min.x, v.x)
+			bb_min.y = min(bb_min.y, v.y)
+			bb_min.z = min(bb_min.z, v.z)
+			bb_max.x = max(bb_max.x, v.x)
+			bb_max.y = max(bb_max.y, v.y)
+			bb_max.z = max(bb_max.z, v.z)
+		}
+
+		extents := bb_max - bb_min
+		height := extents.y
+		radius := max(extents.x, extents.z) / 2.0
+
+		append(
+			colliders,
+			Collider {
+				kind = .Cylinder,
+				min = bb_min,
+				max = bb_max,
+				direction = dir,
+				radius = radius,
+				height = height,
+			},
+		)
+	} else if strings.contains(node_name, "SPHERE") {
+		// Extract center and radius from bounding box
+		bb_min := Vec3{math.F32_MAX, math.F32_MAX, math.F32_MAX}
+		bb_max := Vec3{math.F32_MIN, math.F32_MIN, math.F32_MIN}
+		for i in 0 ..< ai_mesh.mNumVertices {
+			v := mem.ptr_offset(ai_mesh.mVertices, int(i))
+			bb_min.x = min(bb_min.x, v.x)
+			bb_min.y = min(bb_min.y, v.y)
+			bb_min.z = min(bb_min.z, v.z)
+			bb_max.x = max(bb_max.x, v.x)
+			bb_max.y = max(bb_max.y, v.y)
+			bb_max.z = max(bb_max.z, v.z)
+		}
+
+		center := (bb_min + bb_max) / 2.0
+		radius := linalg.length(bb_max - center)
+
+		append(colliders, Collider{kind = .Sphere, center = center, radius = radius})
+	} else {
+		fmt.panicf(
+			"Unknown collider type for node '%s'. Please name your collider meshes with a type hint, e.g. 'COL_CUBE'",
+			node_name,
+		)
+	}
+}
+
 process_node :: proc(
 	node: ^assimp.aiNode,
 	scene: ^assimp.aiScene,
 	meshes: ^[dynamic]Mesh,
+	colliders: ^[dynamic]Collider,
 	directory: string,
 ) {
+	// Skip collision/physics nodes (COL_ prefix convention)
+	node_name := aistring_to_string(&node.mName)
+	defer delete(node_name)
+	if strings.has_prefix(node_name, "COL_") {
+		assert(node.mNumMeshes == 1, "Collider node must have exactly one mesh")
+		mesh_index := mem.ptr_offset(node.mMeshes, 0)^
+		ai_mesh := mem.ptr_offset(scene.mMeshes, int(mesh_index))^
+		process_collider(ai_mesh, node, node_name, colliders)
+		log.debugf("Processed collider node '%s'", node_name)
+		return
+	}
+
 	// Process all meshes in this node
 	for i in 0 ..< node.mNumMeshes {
 		mesh_index := mem.ptr_offset(node.mMeshes, int(i))^
@@ -507,21 +609,17 @@ process_node :: proc(
 	// Recursively process children
 	for i in 0 ..< node.mNumChildren {
 		child := mem.ptr_offset(node.mChildren, int(i))^
-		process_node(child, scene, meshes, directory)
+		process_node(child, scene, meshes, colliders, directory)
 	}
 }
 
 kind_to_path :: proc(kind: ModelKind) -> string {
 	path: string
 	switch kind {
-	case .Bulb:
-		path = ("res/bulb/bulb.obj")
-	case .Backpack:
-		path = ("res/backpack/backpack.obj")
-	case .Container:
-		path = ("res/container/container.obj")
 	case .CharacterLowPoly:
 		path = ("res/character-low-poly/Character.gltf")
+	case .Picadrill:
+		path = ("res/picadrill/picadrill.gltf")
 	}
 
 	path, _ = filepath.from_slash(path) // TEST: test that this really works on windows even though im passing slash here
@@ -567,7 +665,10 @@ extract_animation :: proc(ai_anim: ^assimp.aiAnimation) -> Animation {
 		ch.position_keys = make([]VectorKey, ai_ch.mNumPositionKeys)
 		for j in 0 ..< ai_ch.mNumPositionKeys {
 			k := mem.ptr_offset(ai_ch.mPositionKeys, int(j))^
-			ch.position_keys[j] = VectorKey{time = k.mTime, value = {k.mValue.x, k.mValue.y, k.mValue.z}}
+			ch.position_keys[j] = VectorKey {
+				time  = k.mTime,
+				value = {k.mValue.x, k.mValue.y, k.mValue.z},
+			}
 		}
 
 		ch.rotation_keys = make([]QuatKey, ai_ch.mNumRotationKeys)
@@ -585,7 +686,10 @@ extract_animation :: proc(ai_anim: ^assimp.aiAnimation) -> Animation {
 		ch.scale_keys = make([]VectorKey, ai_ch.mNumScalingKeys)
 		for j in 0 ..< ai_ch.mNumScalingKeys {
 			k := mem.ptr_offset(ai_ch.mScalingKeys, int(j))^
-			ch.scale_keys[j] = VectorKey{time = k.mTime, value = {k.mValue.x, k.mValue.y, k.mValue.z}}
+			ch.scale_keys[j] = VectorKey {
+				time  = k.mTime,
+				value = {k.mValue.x, k.mValue.y, k.mValue.z},
+			}
 		}
 
 		anim.channel_map[ch.node_name] = int(i)
@@ -606,9 +710,15 @@ interpolate_position :: proc(ch: ^NodeAnim, anim_time: f64) -> Vec3 {
 		}
 	}
 
-	t := f32((anim_time - ch.position_keys[idx].time) / (ch.position_keys[idx + 1].time - ch.position_keys[idx].time))
+	t := f32(
+		(anim_time - ch.position_keys[idx].time) /
+		(ch.position_keys[idx + 1].time - ch.position_keys[idx].time),
+	)
 	t = clamp(t, 0, 1)
-	return ch.position_keys[idx].value + t * (ch.position_keys[idx + 1].value - ch.position_keys[idx].value)
+	return(
+		ch.position_keys[idx].value +
+		t * (ch.position_keys[idx + 1].value - ch.position_keys[idx].value) \
+	)
 }
 
 interpolate_rotation :: proc(ch: ^NodeAnim, anim_time: f64) -> quaternion128 {
@@ -649,7 +759,10 @@ interpolate_scale :: proc(ch: ^NodeAnim, anim_time: f64) -> Vec3 {
 		}
 	}
 
-	t := f32((anim_time - ch.scale_keys[idx].time) / (ch.scale_keys[idx + 1].time - ch.scale_keys[idx].time))
+	t := f32(
+		(anim_time - ch.scale_keys[idx].time) /
+		(ch.scale_keys[idx + 1].time - ch.scale_keys[idx].time),
+	)
 	t = clamp(t, 0, 1)
 	return ch.scale_keys[idx].value + t * (ch.scale_keys[idx + 1].value - ch.scale_keys[idx].value)
 }
@@ -680,7 +793,15 @@ compute_node_transforms :: proc(
 	}
 
 	for &child in node.children {
-		compute_node_transforms(&child, global_transform, global_inverse, mesh, anim, anim_time, result)
+		compute_node_transforms(
+			&child,
+			global_transform,
+			global_inverse,
+			mesh,
+			anim,
+			anim_time,
+			result,
+		)
 	}
 }
 

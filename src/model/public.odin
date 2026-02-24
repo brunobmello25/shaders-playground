@@ -6,13 +6,31 @@ import "core:mem"
 import "core:strings"
 
 import assimp "../vendor/assimp"
+import sg "../vendor/sokol/sokol/gfx"
 
 Model :: struct {
 	meshes:         []Mesh,
+	colliders:      []Collider,
 	directory:      string,
 	root_node:      Node,
 	global_inverse: Mat4,
 	animations:     []Animation,
+}
+
+ColliderKind :: enum {
+	Box,
+	Cylinder,
+	Sphere,
+}
+
+Collider :: struct {
+	kind:      ColliderKind,
+	min:       Vec3,
+	max:       Vec3,
+	center:    Vec3,
+	direction: Vec3, // for cylinder: world-space axis direction
+	radius:    f32, // for cylinder
+	height:    f32, // for cylinder
 }
 
 load :: proc(kind: ModelKind) -> (^Model, bool) {
@@ -45,10 +63,11 @@ load :: proc(kind: ModelKind) -> (^Model, bool) {
 
 	// Process meshes
 	meshes := make([dynamic]Mesh)
+	colliders := make([dynamic]Collider)
 
 	// Try node hierarchy first
 	if scene.mRootNode != nil {
-		process_node(scene.mRootNode, scene, &meshes, directory)
+		process_node(scene.mRootNode, scene, &meshes, &colliders, directory)
 	}
 
 	// If no meshes from nodes, process all scene meshes directly
@@ -76,13 +95,88 @@ load :: proc(kind: ModelKind) -> (^Model, bool) {
 		len(animations),
 	)
 	loaded_models[filepath] = Model {
-		meshes         = meshes[:],
+		meshes         = meshes[:], // TODO: are we memory leaking here?
+		colliders      = colliders[:],
 		directory      = directory,
 		root_node      = root_node,
 		global_inverse = global_inverse,
 		animations     = animations,
 	}
 	return &loaded_models[filepath], true
+}
+
+make_solid_texture :: proc(color: [4]u8, kind: TextureKind) -> Texture {
+	pixel := color
+	image := sg.make_image(
+		{
+			width = 1,
+			height = 1,
+			pixel_format = .RGBA8,
+			data = {mip_levels = {0 = sg.Range{ptr = &pixel, size = size_of(pixel)}}},
+		},
+	)
+	view := sg.make_view(
+		{
+			texture = {
+				image = image,
+				slices = {base = 0, count = 1},
+				mip_levels = {base = 0, count = 1},
+			},
+		},
+	)
+	sampler := sg.make_sampler(
+		{
+			mag_filter = .LINEAR,
+			min_filter = .NEAREST,
+			wrap_u = .CLAMP_TO_EDGE,
+			wrap_v = .CLAMP_TO_EDGE,
+		},
+	)
+	return Texture{kind = kind, image = image, view = view, sampler = sampler}
+}
+
+// Build a flat quad Model procedurally — no Assimp required.
+// Each vertex gets one bone influence (bone 0, weight 1.0) so the skinning shader
+// doesn't zero out positions when all bone_transforms are identity (anim_idx = -1).
+make_plane :: proc(
+	size: f32,
+	diffuse: [4]u8 = {0, 0, 0, 255},
+	specular: [4]u8 = {0, 0, 0, 255},
+) -> ^Model {
+	half := size / 2.0
+
+	vertices := []Vertex {
+		{position = {-half, 0, -half}, normal = {0, 1, 0}, tex_coords = {0, 0}},
+		{position = {half, 0, -half}, normal = {0, 1, 0}, tex_coords = {1, 0}},
+		{position = {half, 0, half}, normal = {0, 1, 0}, tex_coords = {1, 1}},
+		{position = {-half, 0, half}, normal = {0, 1, 0}, tex_coords = {0, 1}},
+	}
+	indices := []u32{0, 1, 2, 0, 2, 3}
+
+	vertex_bone_data: map[int]VertexBoneData
+	for i in 0 ..< 4 {
+		vertex_bone_data[i] = VertexBoneData {
+			influences = {0 = {bone_index = 0, weight = 1.0}},
+			count = 1,
+		}
+	}
+
+	textures := make([]Texture, 2)
+	textures[0] = make_solid_texture(diffuse, .Diffuse)
+	textures[1] = make_solid_texture(specular, .Specular)
+
+	mesh := Mesh {
+		vertices         = vertices,
+		indices          = indices,
+		vertex_bone_data = vertex_bone_data,
+		textures         = textures,
+	}
+	setup_mesh(&mesh)
+
+	m := new(Model)
+	m.meshes = make([]Mesh, 1)
+	m.meshes[0] = mesh
+	return m
 }
 
 // Caller must apply pipeline and set global uniforms before calling

@@ -11,9 +11,6 @@ LightKind :: enum {
 	Spot,
 }
 
-// TODO: make this unmutable somehow?
-zero_light: Light = {}
-
 LightHandle :: struct {
 	id:    int,
 	index: int,
@@ -34,11 +31,12 @@ Light :: struct {
 	outer_cutoff:          f32,
 }
 
-LightGlobals :: struct {
-	lights:                     [MAX_LIGHTS]Light,
-	light_count:                int,
-	next_available_light_index: int,
-}
+// TODO: make this unmutable somehow?
+zero_light: Light = {}
+
+lights: [MAX_LIGHTS]Light
+light_count: int
+next_available_light_index: int
 
 light_to_handle :: proc(l: ^Light) -> LightHandle {
 	return l.handle
@@ -47,7 +45,7 @@ light_to_handle :: proc(l: ^Light) -> LightHandle {
 handle_to_light :: proc(lh: LightHandle) -> ^Light {
 	assert(lh.index >= 0 && lh.index < MAX_LIGHTS, "Invalid light handle index")
 
-	l := &g.lights[lh.index]
+	l := &lights[lh.index]
 
 
 	if l.handle.id != lh.id {
@@ -60,15 +58,15 @@ handle_to_light :: proc(lh: LightHandle) -> ^Light {
 // TODO: add proper asserts here
 light_create :: proc() -> ^Light {
 	// TODO: also should create a free list
-	if g.next_available_light_index >= MAX_LIGHTS {
+	if next_available_light_index >= MAX_LIGHTS {
 		panic("Max lights reached")
 	}
 
-	index := g.next_available_light_index
-	g.next_available_light_index += 1
-	g.light_count += 1
+	index := next_available_light_index
+	next_available_light_index += 1
+	light_count += 1
 
-	return &g.lights[index]
+	return &lights[index]
 }
 
 lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
@@ -82,8 +80,8 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 	cutoffs := [MAX_LIGHTS][4]f32{}
 
 
-	for i in 0 ..< g.light_count {
-		light := g.lights[i]
+	for i in 0 ..< light_count {
+		light := lights[i]
 		if light.kind == .nil {
 			continue
 		}
@@ -104,7 +102,7 @@ lights_to_shader_uniform :: proc() -> shaders.Fs_Lights {
 	}
 
 	return shaders.Fs_Lights {
-		light_count = i32(g.light_count),
+		light_count = i32(light_count),
 		kinds = kinds,
 		directions = directions,
 		positions = positions,
@@ -123,7 +121,7 @@ setup_world_lights :: proc() {
 		direction = Vec3{-0.2, -1.0, -0.3},
 		ambient = Vec3{0.2, 0.2, 0.2},
 		diffuse = Vec3{0.5, 0.5, 0.5},
-		specular = Vec3{1.0, 1.0, 1.0},
+		specular = Vec3{0.1, 0.1, 0.1},
 	)
 }
 

@@ -2,6 +2,8 @@ package main
 
 import sapp "vendor/sokol/sokol/app"
 
+input: Input
+
 Input :: struct {
 	mouse_delta:     Vec2,
 	is_mouse_locked: bool,
@@ -18,7 +20,7 @@ Input :: struct {
 set_mouse_lock :: proc(lock: bool) {
 	sapp.lock_mouse(lock)
 	sapp.show_mouse(!lock)
-	g.input.is_mouse_locked = lock
+	input.is_mouse_locked = lock
 }
 
 toggle_mouse_lock :: proc(input: ^Input) {

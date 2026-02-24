@@ -4,6 +4,11 @@ package main
 import "base:runtime"
 import "core:log"
 
+import "config"
+import "primitives"
+import "shaders"
+import "ui"
+
 import sapp "vendor/sokol/sokol/app"
 import sg "vendor/sokol/sokol/gfx"
 import sglue "vendor/sokol/sokol/glue"
@@ -11,6 +16,15 @@ import shelpers "vendor/sokol/sokol/helpers"
 import stime "vendor/sokol/sokol/time"
 
 our_context: runtime.Context
+
+dt: f32
+
+Mat4 :: matrix[4, 4]f32
+Vec4 :: [4]f32
+Vec3 :: [3]f32
+Vec2 :: [2]f32
+
+sky_color: Vec4 = {224.0 / 255.0, 238.0 / 255.0, 222.0 / 255.0, 1}
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -33,7 +47,7 @@ main :: proc() {
 init :: proc "c" () {
 	context = our_context
 
-	set_mouse_lock(false)
+	config.load()
 
 	stime.setup()
 
@@ -46,51 +60,93 @@ init :: proc "c" () {
 		},
 	)
 
-	init_globals()
+	set_mouse_lock(false)
+
+	shaders.init()
+	ui.init()
+
+	init_camera()
+	setup_world_lights()
+
+	primitives.init()
+	init_game_state()
 
 	ch := entity_create()
 	setup_character(ch)
+
+	pd := entity_create()
+	setup_picadrill(pd)
+	pd.position = {0, 0, -5}
 }
 
 cleanup :: proc "c" () {
 	context = our_context
+	ui.shutdown()
+	config.save()
 }
 
 frame :: proc "c" () {
 	context = our_context
 
+	// ==================== Startup ====================
+	@(static) last_time: u64
+	dt = f32(stime.sec(stime.laptime(&last_time)))
+
 	sg.begin_pass(
 		{
 			swapchain = sglue.swapchain(),
 			action = {
-				colors = {0 = {load_action = .CLEAR, clear_value = {0.1, 0.1, 0.1, 1}}},
+				colors = {
+					0 = {
+						load_action = .CLEAR,
+						clear_value = sg.Color{sky_color.r, sky_color.g, sky_color.b, sky_color.a},
+					},
+				},
 				depth = {load_action = .CLEAR, clear_value = 1.0},
 			},
 		},
 	)
 
-	g.dt = f32(stime.sec(stime.laptime(&g.last_time)))
+	ui.begin_frame()
 
-	update_camera(&g.camera, &g.input)
+	// ==================== Input ====================
+	toggle_debug_menu(input)
+	toggle_mouse_lock(&input)
+	update_camera(&camera, &input)
 
-	for &e in g.entities {
+	// ===================== Bunch of stuff...? =====================
+	render_debug_ui()
+	draw_floor()
+
+	for &e in entities {
 		if e.kind == .nil {
 			continue
 		}
 
 		e.update(&e)
-		e.draw(&e, g.camera)
+		e.draw(&e, camera)
 	}
 
-	sg.end_pass()
+	// ===================== Wrap up =====================
 
-	update_key_states(&g.input)
+	// Render UI on top of 3D (inside the same pass)
+	ui.render()
+
+	update_key_states(&input)
+
+	sg.end_pass()
+	sg.commit()
 }
 
 event :: proc "c" (event: ^sapp.Event) {
 	context = our_context
 
-	update_input_maps(event, &g.input)
-	update_mouse_delta(event, &g.input)
-	toggle_mouse_lock(&g.input)
+	ui.handle_event(event)
+
+	update_input_maps(event, &input)
+	update_mouse_delta(event, &input)
+}
+
+init_game_state :: proc() {
+	init_floor()
 }

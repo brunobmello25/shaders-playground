@@ -1,3 +1,6 @@
 # Ignore vendor dependencies in fuzzy finders and search tools
 src/vendor/
+
 *.md
+!README.md
+!docs/*.md
