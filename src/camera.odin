@@ -70,7 +70,7 @@ view_and_projection :: proc(camera: Camera) -> (Mat4, Mat4) {
 }
 
 update_camera :: proc(camera: ^Camera, input: ^Input) {
-	camera_speed := f32(5 * sapp.frame_duration())
+	camera_speed := f32(20 * sapp.frame_duration())
 	mouse_sensitivity := f32(0.1)
 
 	front := camera_front(camera^)
